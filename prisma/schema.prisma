@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Page {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  status           String            @default("draft")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  collectionGroups CollectionGroup[]
+}
+
+model CollectionGroup {
+  id             String       @id @default(uuid())
+  name           String
+  style          String
+  backgroundImage String?
+  reference      String?
+  additionalData String?      // JSON string
+  status         String       @default("draft")
+  order          Int          @default(0)
+  pageId         String
+  page           Page         @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  collections    Collection[]
+}
+
+model Collection {
+  id                String            @id @default(uuid())
+  name              String
+  link              String?
+  shopifyId         String?
+  collectionType    String?
+  isScrollable      Boolean           @default(false)
+  style             String
+  horizontal        Boolean           @default(false)
+  additionalData    String?           // JSON string
+  navigation        String?           // JSON string
+  image             String?
+  column            Int?
+  button            String?
+  collectionFilters String?           // JSON string
+  status            String            @default("draft")
+  order             Int               @default(0)
+  groupId           String
+  group             CollectionGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  items             CollectionItem[]
+}
+
+model CollectionItem {
+  id             String     @id @default(uuid())
+  name           String
+  images         String?    // JSON string
+  text1          String?
+  text2          String?
+  text3          String?
+  link           String?
+  shopifyId      String?
+  style          String
+  media          String?
+  additionalData String?    // JSON string
+  reference      String?
+  navigation     String?    // JSON string
+  button         String?
+  status         String     @default("draft")
+  order          Int        @default(0)
+  collectionId   String
+  collection     Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+}
+
+model GlobalSetting {
+  id                         String  @id @default(uuid())
+  offers                     String?
+  bestSellerTag              String?
+  newArrivalTag              String?
+  sellingFastTag             String?
+  bigSaveBasedOnValue        String?
+  productLabelTheme          String?
+  wishlist                   Boolean @default(true)
+  productDetailTag           String? // JSON string
+  tagPriority                String? // JSON string
+  sellingFastQTY             Int?
+  appForceUpdateVersion      String?
+  appNewVersion              String?
+  androidForceUpdateVersion  String?
+  androidNewVersion          String?
+  iosForceUpdateVersion      String?
+  iosNewVersion              String?
+}
+
+model GlobalStyle {
+  id        String @id @default(uuid())
+  styleList String // JSON string
+}
+
+model Store {
+  id            String  @id @default(uuid())
+  name          String
+  address       String?
+  contactUs     String?
+  direction     String?
+  latitude      Float?
+  longitude     Float?
+  city          String?
+  state         String?
+  image         String?
+  rating        Float?
+  ratingUser    Int?
+  openingTime   String?
+  closingTime   String?
+  storePosition Int     @default(0)
+  isPopular     Boolean @default(false)
+  status        String  @default("published")
+}
+
+model ProductColor {
+  id        String  @id @default(uuid())
+  colorName String
+  colorCode String?
+  imageUrl  String?
+  imageName String?
+  colorType String  @default("Color")
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  url       String
+  name      String
+  size      Int?
+  type      String?
+  createdAt DateTime @default(now())
+}
+
+model HomeShopPage {
+  id        String @id @default(uuid())
+  data      String // JSON string
+}

@@ -1,0 +1,151 @@
+{
+  "pages": [
+    {
+      "id": "home-page-id",
+      "name": "Home Page",
+      "slug": "home",
+      "status": "published",
+      "createdAt": "2026-03-31T06:08:14.244Z",
+      "updatedAt": "2026-03-31T06:08:14.245Z",
+      "collectionGroups": [
+        {
+          "id": "hero-group-id",
+          "name": "Hero Section",
+          "style": "FullWidth",
+          "status": "published",
+          "order": 0,
+          "createdAt": "2026-03-31T06:08:14.245Z",
+          "updatedAt": "2026-03-31T06:08:14.245Z",
+          "collections": [
+            {
+              "id": "hero-banner-id",
+              "name": "Main Banner",
+              "style": "Banner",
+              "status": "published",
+              "order": 0,
+              "createdAt": "2026-03-31T06:08:14.245Z",
+              "updatedAt": "2026-03-31T06:08:14.245Z",
+              "items": [
+                {
+                  "id": "banner-item-1",
+                  "name": "Summer Sale",
+                  "style": "Banner",
+                  "imageUrl": "https://picsum.photos/seed/summer/800/400",
+                  "link": "/collection/summer",
+                  "status": "published",
+                  "order": 0,
+                  "createdAt": "2026-03-31T06:08:14.245Z",
+                  "updatedAt": "2026-03-31T06:08:14.245Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "featured-group-id",
+          "name": "Featured Products",
+          "style": "Grid",
+          "status": "published",
+          "order": 1,
+          "createdAt": "2026-03-31T06:08:14.245Z",
+          "updatedAt": "2026-03-31T06:08:14.245Z",
+          "collections": [
+            {
+              "id": "new-arrivals-id",
+              "name": "New Arrivals",
+              "style": "Rectangle",
+              "status": "published",
+              "order": 0,
+              "createdAt": "2026-03-31T06:08:14.245Z",
+              "updatedAt": "2026-03-31T06:08:14.245Z",
+              "items": [
+                {
+                  "id": "item-1",
+                  "name": "Cool T-Shirt",
+                  "style": "Rectangle",
+                  "imageUrl": "https://picsum.photos/seed/shirt/400/600",
+                  "link": "/product/1",
+                  "status": "published",
+                  "order": 0,
+                  "createdAt": "2026-03-31T06:08:14.245Z",
+                  "updatedAt": "2026-03-31T06:08:14.245Z"
+                },
+                {
+                  "id": "item-2",
+                  "name": "Denim Jeans",
+                  "style": "Rectangle",
+                  "imageUrl": "https://picsum.photos/seed/jeans/400/600",
+                  "link": "/product/2",
+                  "status": "published",
+                  "order": 1,
+                  "createdAt": "2026-03-31T06:08:14.245Z",
+                  "updatedAt": "2026-03-31T06:08:14.245Z"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "globalSettings": {
+    "id": "settings-id",
+    "appTags": [
+      "fashion",
+      "ecommerce"
+    ],
+    "appLabels": {
+      "en": "My Fashion Store"
+    },
+    "appVersion": "1.0.0",
+    "isWishlistEnabled": true,
+    "isCartEnabled": true,
+    "isSearchEnabled": true,
+    "isNotificationEnabled": true,
+    "isProfileEnabled": true,
+    "isStoreEnabled": true,
+    "isColorEnabled": true,
+    "isMediaEnabled": true
+  },
+  "globalStyles": {
+    "id": "styles-id",
+    "styleList": [
+      {
+        "name": "Primary",
+        "color": "#FF6321"
+      },
+      {
+        "name": "Secondary",
+        "color": "#000000"
+      }
+    ],
+    "globalThemeColor": "#FF6321"
+  },
+  "stores": [
+    {
+      "id": "store-1",
+      "name": "Main Outlet",
+      "address": "123 Fashion St, New York",
+      "contact": "+1 234 567 890",
+      "location": "40.7128,-74.0060",
+      "operatingHours": "9 AM - 9 PM"
+    }
+  ],
+  "productColors": [
+    {
+      "id": "color-1",
+      "name": "Sunset Orange",
+      "colorCode": "#FF6321"
+    }
+  ],
+  "media": [
+    {
+      "id": "media-1",
+      "name": "Logo",
+      "url": "https://picsum.photos/seed/logo/200/200",
+      "type": "image",
+      "createdAt": "2026-03-31T06:08:14.245Z"
+    }
+  ],
+  "homeShopPage": null
+}
