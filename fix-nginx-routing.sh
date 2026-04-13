@@ -1,12 +1,12 @@
 #!/bin/bash
-# Setup nginx to route /appbuilder to port 3002
+# Fix nginx routing to correctly route /appbuilder to port 3002
 
-echo "🔧 Setting up nginx for /appbuilder route..."
+echo "🔧 Fixing nginx routing..."
 
-# Backup existing nginx config
+# Backup current config
 sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup.$(date +%Y%m%d_%H%M%S)
 
-# Create new nginx configuration
+# Update nginx configuration
 sudo tee /etc/nginx/sites-available/default > /dev/null << 'NGINX_CONFIG'
 server {
     listen 80 default_server;
@@ -17,20 +17,7 @@ server {
 
     server_name _;
 
-    # Existing app on port 3001
-    location / {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # App Builder on port 3002 with /appbuilder route
+    # App Builder on port 3002 with /appbuilder route (MUST come first)
     location /appbuilder/ {
         proxy_pass http://localhost:3002/;
         proxy_http_version 1.1;
@@ -45,6 +32,19 @@ server {
     
     location = /appbuilder {
         return 301 /appbuilder/;
+    }
+
+    # Existing marketplace app on port 3001 (catch-all, comes last)
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 NGINX_CONFIG
@@ -61,16 +61,15 @@ if [ $? -eq 0 ]; then
     sudo systemctl reload nginx
     
     echo ""
-    echo "✅ Setup complete!"
+    echo "✅ Nginx routing fixed!"
     echo ""
-    echo "Your app is now accessible at:"
-    echo "  - Main app: http://43.205.214.197:3001"
-    echo "  - App Builder: http://43.205.214.197:3001/appbuilder"
-    echo "  - Via ngrok: https://wormlike-loren-harmoniously.ngrok-free.dev/appbuilder"
+    echo "Test the routes:"
+    echo "  curl http://localhost/appbuilder/"
+    echo ""
+    echo "Access in browser:"
+    echo "  https://wormlike-loren-harmoniously.ngrok-free.dev/appbuilder/"
     echo ""
 else
     echo "❌ Nginx configuration test failed"
-    echo "Restoring backup..."
-    sudo cp /etc/nginx/sites-available/default.backup.* /etc/nginx/sites-available/default
     exit 1
 fi

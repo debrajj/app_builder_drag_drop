@@ -72,9 +72,8 @@ server {
     }
 
     # App Builder on port 3002 with /appbuilder route
-    location /appbuilder {
-        rewrite ^/appbuilder(/.*)$ $1 break;
-        proxy_pass http://localhost:3002;
+    location /appbuilder/ {
+        proxy_pass http://localhost:3002/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -83,6 +82,10 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location = /appbuilder {
+        return 301 /appbuilder/;
     }
 }
 NGINX_CONFIG
