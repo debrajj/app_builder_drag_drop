@@ -1,3 +1,21 @@
+#!/bin/bash
+# Complete fix and deployment script
+# Run this on your EC2 server
+
+set -e
+
+echo "🔧 Fixing and deploying App Builder..."
+
+# Stop any existing process
+echo "Stopping existing process..."
+pm2 delete appbuilder 2>/dev/null || true
+
+# Go to app directory
+cd ~/appbuilder
+
+# Update package.json with start script
+echo "Updating package.json..."
+cat > package.json << 'EOF'
 {
   "name": "react-example",
   "private": true,
@@ -42,3 +60,34 @@
     "vite": "^6.2.0"
   }
 }
+EOF
+
+# Install dependencies
+echo "Installing dependencies..."
+npm install
+
+# Build application
+echo "Building application..."
+npm run build
+
+# Start with PM2
+echo "Starting application..."
+pm2 start npm --name "appbuilder" -- start
+
+# Save PM2 config
+pm2 save
+
+echo ""
+echo "✅ Deployment complete!"
+echo ""
+echo "Check status:"
+echo "  pm2 status"
+echo ""
+echo "View logs:"
+echo "  pm2 logs appbuilder"
+echo ""
+echo "Test locally:"
+echo "  curl http://localhost:3002"
+echo ""
+echo "⚠️  Don't forget to open port 3002 in AWS Security Group!"
+echo "Then access: http://43.205.214.197:3002"
