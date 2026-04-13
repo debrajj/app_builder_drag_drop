@@ -12,8 +12,33 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const BASE_PATH = process.env.BASE_PATH || '';
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 
 app.use(express.json({ limit: '50mb' }));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowAnyOrigin = ALLOWED_ORIGINS.includes('*');
+  const originAllowed = !!origin && ALLOWED_ORIGINS.includes(origin);
+
+  if (allowAnyOrigin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else if (originAllowed) {
+    res.header('Access-Control-Allow-Origin', origin!);
+    res.header('Vary', 'Origin');
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 // Helper function to create route with base path
 const route = (path: string) => `${BASE_PATH}${path}`;

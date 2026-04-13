@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import axios from 'axios';
 import { Page, GlobalSetting, GlobalStyle, Store, ProductColor, Media, CollectionGroup, Collection, CollectionItem, CollectionStyle, CollectionItemStyle } from './types';
+import { api } from './lib/api';
 
 // Helper function to map Collection Style to Item Style
 const getItemStyleFromCollectionStyle = (collectionStyle: string): string => {
@@ -102,7 +102,7 @@ export const useStore = create<AppState>((set, get) => ({
   fetchPages: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get('/api/pages');
+      const res = await api.get('/api/pages');
       const data = res.data;
       set({ pages: Array.isArray(data) ? data : (data.pages || []), loading: false });
     } catch (error) {
@@ -113,17 +113,17 @@ export const useStore = create<AppState>((set, get) => ({
 
   fetchPage: async (id: string) => {
     set({ loading: true });
-    const res = await axios.get(`/api/pages/${id}`);
+    const res = await api.get(`/api/pages/${id}`);
     set({ currentPage: res.data, loading: false });
   },
 
   createPage: async (name: string) => {
-    await axios.post('/api/pages', { name });
+    await api.post('/api/pages', { name });
     get().fetchPages();
   },
 
   updatePage: async (id: string, data: any) => {
-    await axios.put(`/api/pages/${id}`, data);
+    await api.put(`/api/pages/${id}`, data);
     if (get().currentPage?.id === id) {
       get().fetchPage(id);
     }
@@ -131,84 +131,84 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   deletePage: async (id: string) => {
-    await axios.delete(`/api/pages/${id}`);
+    await api.delete(`/api/pages/${id}`);
     get().fetchPages();
   },
 
   fetchGlobalSettings: async () => {
-    const res = await axios.get('/api/global-settings');
+    const res = await api.get('/api/global-settings');
     set({ globalSettings: res.data });
   },
 
   updateGlobalSettings: async (data: any) => {
-    await axios.post('/api/global-settings', data);
+    await api.post('/api/global-settings', data);
     get().fetchGlobalSettings();
   },
 
   fetchGlobalStyles: async () => {
-    const res = await axios.get('/api/global-styles');
+    const res = await api.get('/api/global-styles');
     set({ globalStyles: res.data });
   },
 
   updateGlobalStyles: async (data: any) => {
-    await axios.post('/api/global-styles', data);
+    await api.post('/api/global-styles', data);
     get().fetchGlobalStyles();
   },
 
   fetchStores: async () => {
-    const res = await axios.get('/api/stores');
+    const res = await api.get('/api/stores');
     set({ stores: res.data });
   },
 
   createStore: async (data: any) => {
-    await axios.post('/api/stores', data);
+    await api.post('/api/stores', data);
     get().fetchStores();
   },
 
   updateStore: async (id: string, data: any) => {
-    await axios.put(`/api/stores/${id}`, data);
+    await api.put(`/api/stores/${id}`, data);
     get().fetchStores();
   },
 
   deleteStore: async (id: string) => {
-    await axios.delete(`/api/stores/${id}`);
+    await api.delete(`/api/stores/${id}`);
     get().fetchStores();
   },
 
   fetchProductColors: async () => {
-    const res = await axios.get('/api/product-colors');
+    const res = await api.get('/api/product-colors');
     set({ productColors: res.data });
   },
 
   createProductColor: async (data: any) => {
-    await axios.post('/api/product-colors', data);
+    await api.post('/api/product-colors', data);
     get().fetchProductColors();
   },
 
   updateProductColor: async (id: string, data: any) => {
-    await axios.put(`/api/product-colors/${id}`, data);
+    await api.put(`/api/product-colors/${id}`, data);
     get().fetchProductColors();
   },
 
   deleteProductColor: async (id: string) => {
-    await axios.delete(`/api/product-colors/${id}`);
+    await api.delete(`/api/product-colors/${id}`);
     get().fetchProductColors();
   },
 
   fetchMedia: async () => {
-    const res = await axios.get('/api/media');
+    const res = await api.get('/api/media');
     set({ media: res.data });
   },
 
   uploadMedia: async (data: any) => {
-    await axios.post('/api/media', data);
+    await api.post('/api/media', data);
     get().fetchMedia();
   },
 
   fetchMiddlewareData: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get('/api/middleware/home-page');
+      const res = await api.get('/api/middleware/home-page');
       console.log('Middleware Data:', res.data);
       // We could map this data to our internal structures if needed
       set({ loading: false });
@@ -219,26 +219,26 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addCollectionGroup: async (pageId: string, name: string, style: string) => {
-    await axios.post('/api/collection-groups', { pageId, name, style });
+    await api.post('/api/collection-groups', { pageId, name, style });
     get().fetchPage(pageId);
   },
 
   updateCollectionGroup: async (id: string, data: any) => {
-    await axios.put(`/api/collection-groups/${id}`, data);
+    await api.put(`/api/collection-groups/${id}`, data);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   deleteCollectionGroup: async (id: string) => {
-    await axios.delete(`/api/collection-groups/${id}`);
+    await api.delete(`/api/collection-groups/${id}`);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   addCollection: async (groupId: string, name: string, style: string) => {
-    await axios.post('/api/collections', { groupId, name, style });
+    await api.post('/api/collections', { groupId, name, style });
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
@@ -258,7 +258,7 @@ export const useStore = create<AppState>((set, get) => ({
             
             // Update all items with the new style
             const updatePromises = collection.items.map(item => 
-              axios.put(`/api/collection-items/${item.id}`, { style: newItemStyle })
+              api.put(`/api/collection-items/${item.id}`, { style: newItemStyle })
             );
             
             await Promise.all(updatePromises);
@@ -268,35 +268,35 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
     
-    await axios.put(`/api/collections/${id}`, data);
+    await api.put(`/api/collections/${id}`, data);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   deleteCollection: async (id: string) => {
-    await axios.delete(`/api/collections/${id}`);
+    await api.delete(`/api/collections/${id}`);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   addCollectionItem: async (collectionId: string, name: string, style: string) => {
-    await axios.post('/api/collection-items', { collectionId, name, style });
+    await api.post('/api/collection-items', { collectionId, name, style });
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   updateCollectionItem: async (id: string, data: any) => {
-    await axios.put(`/api/collection-items/${id}`, data);
+    await api.put(`/api/collection-items/${id}`, data);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
   },
 
   deleteCollectionItem: async (id: string) => {
-    await axios.delete(`/api/collection-items/${id}`);
+    await api.delete(`/api/collection-items/${id}`);
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
