@@ -15,8 +15,11 @@ const BASE_PATH = process.env.BASE_PATH || '';
 
 app.use(express.json({ limit: '50mb' }));
 
+// Helper function to create route with base path
+const route = (path: string) => `${BASE_PATH}${path}`;
+
 // API Routes
-app.get(`${BASE_PATH}/api/pages`, async (req, res) => {
+app.get(route("/api/pages"), async (req, res) => {
   try {
     const pages = await prisma.page.findMany({
       include: { collectionGroups: { include: { collections: { include: { items: true } } } } },
@@ -30,7 +33,7 @@ app.get(`${BASE_PATH}/api/pages`, async (req, res) => {
   }
 });
 
-app.post("/api/pages", async (req, res) => {
+app.post(route("/api/pages"), async (req, res) => {
   const { name, slug } = req.body;
   const page = await prisma.page.create({
     data: { name, slug: slug || name.toLowerCase().replace(/ /g, '-') }
@@ -38,7 +41,7 @@ app.post("/api/pages", async (req, res) => {
   res.json(page);
 });
 
-app.get("/api/pages/:id", async (req, res) => {
+app.get(route("/api/pages/:id"), async (req, res) => {
   const page = await prisma.page.findUnique({
     where: { id: req.params.id },
     include: { collectionGroups: { include: { collections: { include: { items: true } } } } }
@@ -46,7 +49,7 @@ app.get("/api/pages/:id", async (req, res) => {
   res.json(page);
 });
 
-app.put("/api/pages/:id", async (req, res) => {
+app.put(route("/api/pages/:id"), async (req, res) => {
   const { name, slug, status } = req.body;
   const page = await prisma.page.update({
     where: { id: req.params.id },
@@ -55,13 +58,13 @@ app.put("/api/pages/:id", async (req, res) => {
   res.json(page);
 });
 
-app.delete("/api/pages/:id", async (req, res) => {
+app.delete(route("/api/pages/:id"), async (req, res) => {
   await prisma.page.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collection Groups
-app.post("/api/collection-groups", async (req, res) => {
+app.post(route("/api/collection-groups"), async (req, res) => {
   const { name, style, pageId, order } = req.body;
   const group = await prisma.collectionGroup.create({
     data: { name, style, pageId, order: order || 0 }
@@ -69,7 +72,7 @@ app.post("/api/collection-groups", async (req, res) => {
   res.json(group);
 });
 
-app.put("/api/collection-groups/:id", async (req, res) => {
+app.put(route("/api/collection-groups/:id"), async (req, res) => {
   const { name, style, backgroundImage, reference, additionalData, status, order } = req.body;
   const group = await prisma.collectionGroup.update({
     where: { id: req.params.id },
@@ -78,13 +81,13 @@ app.put("/api/collection-groups/:id", async (req, res) => {
   res.json(group);
 });
 
-app.delete("/api/collection-groups/:id", async (req, res) => {
+app.delete(route("/api/collection-groups/:id"), async (req, res) => {
   await prisma.collectionGroup.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collections
-app.post("/api/collections", async (req, res) => {
+app.post(route("/api/collections"), async (req, res) => {
   const { name, style, groupId, order } = req.body;
   const collection = await prisma.collection.create({
     data: { name, style, groupId, order: order || 0 }
@@ -92,7 +95,7 @@ app.post("/api/collections", async (req, res) => {
   res.json(collection);
 });
 
-app.put("/api/collections/:id", async (req, res) => {
+app.put(route("/api/collections/:id"), async (req, res) => {
   const { name, link, shopifyId, collectionType, isScrollable, style, horizontal, additionalData, navigation, image, column, button, collectionFilters, status, order } = req.body;
   const collection = await prisma.collection.update({
     where: { id: req.params.id },
@@ -101,13 +104,13 @@ app.put("/api/collections/:id", async (req, res) => {
   res.json(collection);
 });
 
-app.delete("/api/collections/:id", async (req, res) => {
+app.delete(route("/api/collections/:id"), async (req, res) => {
   await prisma.collection.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collection Items
-app.post("/api/collection-items", async (req, res) => {
+app.post(route("/api/collection-items"), async (req, res) => {
   const { name, style, collectionId, order } = req.body;
   const item = await prisma.collectionItem.create({
     data: { name, style, collectionId, order: order || 0 }
@@ -115,7 +118,7 @@ app.post("/api/collection-items", async (req, res) => {
   res.json(item);
 });
 
-app.put("/api/collection-items/:id", async (req, res) => {
+app.put(route("/api/collection-items/:id"), async (req, res) => {
   const { name, images, text1, text2, text3, link, shopifyId, style, media, additionalData, reference, navigation, button, status, order } = req.body;
   const item = await prisma.collectionItem.update({
     where: { id: req.params.id },
@@ -124,13 +127,13 @@ app.put("/api/collection-items/:id", async (req, res) => {
   res.json(item);
 });
 
-app.delete("/api/collection-items/:id", async (req, res) => {
+app.delete(route("/api/collection-items/:id"), async (req, res) => {
   await prisma.collectionItem.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Global Styles
-app.get("/api/global-styles", async (req, res) => {
+app.get(route("/api/global-styles"), async (req, res) => {
   try {
     const styles = await prisma.globalStyle.findFirst();
     res.json(styles);
@@ -139,7 +142,7 @@ app.get("/api/global-styles", async (req, res) => {
   }
 });
 
-app.post("/api/global-styles", async (req, res) => {
+app.post(route("/api/global-styles"), async (req, res) => {
   try {
     const { styleList } = req.body;
     const existing = await prisma.globalStyle.findFirst();
@@ -160,7 +163,7 @@ app.post("/api/global-styles", async (req, res) => {
 });
 
 // Global Settings
-app.get("/api/global-settings", async (req, res) => {
+app.get(route("/api/global-settings"), async (req, res) => {
   try {
     const settings = await prisma.globalSetting.findFirst();
     res.json(settings);
@@ -169,7 +172,7 @@ app.get("/api/global-settings", async (req, res) => {
   }
 });
 
-app.post("/api/global-settings", async (req, res) => {
+app.post(route("/api/global-settings"), async (req, res) => {
   try {
     const existing = await prisma.globalSetting.findFirst();
     if (existing) {
@@ -189,59 +192,59 @@ app.post("/api/global-settings", async (req, res) => {
 });
 
 // Stores
-app.get("/api/stores", async (req, res) => {
+app.get(route("/api/stores"), async (req, res) => {
   const stores = await prisma.store.findMany({ orderBy: { storePosition: 'asc' } });
   res.json(stores);
 });
 
-app.post("/api/stores", async (req, res) => {
+app.post(route("/api/stores"), async (req, res) => {
   const store = await prisma.store.create({ data: req.body });
   res.json(store);
 });
 
-app.put("/api/stores/:id", async (req, res) => {
+app.put(route("/api/stores/:id"), async (req, res) => {
   const store = await prisma.store.update({ where: { id: req.params.id }, data: req.body });
   res.json(store);
 });
 
-app.delete("/api/stores/:id", async (req, res) => {
+app.delete(route("/api/stores/:id"), async (req, res) => {
   await prisma.store.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Product Colors
-app.get("/api/product-colors", async (req, res) => {
+app.get(route("/api/product-colors"), async (req, res) => {
   const colors = await prisma.productColor.findMany();
   res.json(colors);
 });
 
-app.post("/api/product-colors", async (req, res) => {
+app.post(route("/api/product-colors"), async (req, res) => {
   const color = await prisma.productColor.create({ data: req.body });
   res.json(color);
 });
 
-app.put("/api/product-colors/:id", async (req, res) => {
+app.put(route("/api/product-colors/:id"), async (req, res) => {
   const color = await prisma.productColor.update({ where: { id: req.params.id }, data: req.body });
   res.json(color);
 });
 
-app.delete("/api/product-colors/:id", async (req, res) => {
+app.delete(route("/api/product-colors/:id"), async (req, res) => {
   await prisma.productColor.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Media
-app.get("/api/media", async (req, res) => {
+app.get(route("/api/media"), async (req, res) => {
   const media = await prisma.media.findMany({ orderBy: { createdAt: 'desc' } });
   res.json(media);
 });
 
-app.post("/api/media", async (req, res) => {
+app.post(route("/api/media"), async (req, res) => {
   const media = await prisma.media.create({ data: req.body });
   res.json(media);
 });
 
-app.get("/api/middleware/home-page", async (req, res) => {
+app.get(route("/api/middleware/home-page"), async (req, res) => {
   try {
     const response = await axios.get("https://middleware.technoboost.in/api/v1/callback/static-page/webview-home-page");
     res.json(response.data);
@@ -251,9 +254,8 @@ app.get("/api/middleware/home-page", async (req, res) => {
 });
 
 // App Build Data - Complete JSON export in middleware format
-app.get("/api/appbuild/data", async (req, res) => {
+app.get(route("/api/appbuild/data"), async (req, res) => {
   try {
-    // Fetch the showcase page (or first published page)
     const page = await prisma.page.findFirst({
       where: { status: 'published' },
       include: { 
@@ -280,7 +282,6 @@ app.get("/api/appbuild/data", async (req, res) => {
       return res.json([]);
     }
 
-    // Transform to middleware format
     const middlewareFormat = page.collectionGroups.map(group => ({
       id: null,
       name: group.name || "null",
@@ -350,12 +351,12 @@ app.get("/api/appbuild/data", async (req, res) => {
 });
 
 // Home & Shop Page
-app.get("/api/home-shop-page", async (req, res) => {
+app.get(route("/api/home-shop-page"), async (req, res) => {
   const page = await prisma.homeShopPage.findFirst();
   res.json(page);
 });
 
-app.post("/api/home-shop-page", async (req, res) => {
+app.post(route("/api/home-shop-page"), async (req, res) => {
   const existing = await prisma.homeShopPage.findFirst();
   if (existing) {
     const updated = await prisma.homeShopPage.update({
@@ -379,12 +380,12 @@ if (process.env.NODE_ENV !== "production") {
   app.use(vite.middlewares);
 } else {
   const distPath = path.join(process.cwd(), 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (req, res) => {
+  app.use(BASE_PATH, express.static(distPath));
+  app.get(`${BASE_PATH}*`, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}${BASE_PATH}`);
 });
