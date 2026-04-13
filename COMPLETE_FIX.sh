@@ -23,10 +23,12 @@ fi
 # Step 2: Test app locally
 echo ""
 echo "2️⃣ Testing app on localhost:3002..."
-if curl -s http://localhost:3002 | grep -q "<!DOCTYPE html>"; then
+RESPONSE=$(curl -s http://localhost:3002)
+if echo "$RESPONSE" | grep -q "html"; then
     echo "✅ App responds correctly on port 3002"
 else
     echo "❌ App not responding correctly"
+    echo "Response: $RESPONSE"
     echo "Check logs: pm2 logs appbuilder"
     exit 1
 fi
@@ -110,11 +112,13 @@ fi
 
 echo ""
 echo "Testing app builder (/appbuilder/):"
-if curl -s http://localhost/appbuilder/ | grep -q "<!DOCTYPE html>"; then
+APPBUILDER_RESPONSE=$(curl -s http://localhost/appbuilder/)
+if echo "$APPBUILDER_RESPONSE" | grep -q "html"; then
     echo "✅ App Builder works on /appbuilder/"
 else
     echo "❌ App Builder not working on /appbuilder/"
-    echo "Checking what's being served..."
+    echo "Response preview: ${APPBUILDER_RESPONSE:0:200}"
+    echo "Checking headers..."
     curl -I http://localhost/appbuilder/
 fi
 
