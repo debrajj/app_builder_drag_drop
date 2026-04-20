@@ -508,8 +508,20 @@ if (process.env.NODE_ENV !== "production") {
   app.use(vite.middlewares);
 } else {
   const distPath = path.join(process.cwd(), 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (req, res) => {
+  
+  // Serve static files but NOT for /api routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    express.static(distPath)(req, res, next);
+  });
+  
+  // Catch-all for React app (only for non-API routes)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
