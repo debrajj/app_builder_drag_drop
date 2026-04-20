@@ -374,6 +374,110 @@ app.get("/api/appbuild/data", async (req, res) => {
   }
 });
 
+// Get page data by slug - e.g., /api/showcase or /api/home
+app.get("/api/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+    
+    // Find page by slug
+    const page = await prisma.page.findFirst({
+      where: { 
+        slug: slug,
+        status: 'published'
+      },
+      include: { 
+        collectionGroups: { 
+          where: { status: 'published' },
+          include: { 
+            collections: { 
+              where: { status: 'published' },
+              include: { 
+                items: {
+                  where: { status: 'published' },
+                  orderBy: { order: 'asc' }
+                }
+              },
+              orderBy: { order: 'asc' }
+            } 
+          },
+          orderBy: { order: 'asc' }
+        } 
+      }
+    });
+
+    if (!page) {
+      return res.status(404).json({ error: `Page '${slug}' not found` });
+    }
+
+    // Transform to middleware format
+    const middlewareFormat = page.collectionGroups.map(group => ({
+      id: null,
+      name: group.name || "null",
+      collection: null,
+      style: group.style,
+      backgroundImage: group.backgroundImage || "null",
+      reference: group.reference,
+      status: false,
+      collections: group.collections.map(collection => ({
+        name: collection.name,
+        link: collection.link || "null",
+        shopifyId: collection.shopifyId || "null",
+        horizontal: collection.horizontal,
+        style: collection.style,
+        collectionType: {
+          id: null,
+          createdDate: null,
+          lastUpdate: null,
+          status: null,
+          name: collection.collectionType || "Card",
+          identifier: collection.collectionType || "SL"
+        },
+        collectionItem: collection.items.map(item => ({
+          name: item.name,
+          text1: item.text1 || "null",
+          text2: item.text2 || "null",
+          text3: item.text3 || "null",
+          link: item.link || "null",
+          shopifyId: item.shopifyId || "null",
+          style: item.style,
+          media: {
+            url: item.media || "",
+            type: item.media ? (item.media.includes('youtube') || item.media.includes('vimeo') || item.media.endsWith('.mp4') ? "video" : "image") : ""
+          },
+          images: item.media ? [{
+            name: item.media.split('/').pop() || "image.jpg",
+            width: "800",
+            height: "800",
+            ext: ".jpg",
+            url: item.media,
+            formats: {
+              large: { ext: ".jpg", url: item.media, size: 100, width: 800, height: 800 },
+              small: { ext: ".jpg", url: item.media, size: 25, width: 400, height: 400 },
+              medium: { ext: ".jpg", url: item.media, size: 50, width: 600, height: 600 },
+              thumbnail: { ext: ".jpg", url: item.media, size: 10, width: 200, height: 200 }
+            }
+          }] : [],
+          additionalData: item.additionalData ? JSON.parse(item.additionalData) : {},
+          navigation: item.navigation ? JSON.parse(item.navigation) : { screenName: "", searchString: "" }
+        })),
+        additionalData: collection.additionalData ? JSON.parse(collection.additionalData) : (collection.style === "SLIDER_COLLECTION" ? { slideSeconds: "5" } : null),
+        filters: collection.collectionFilters ? JSON.parse(collection.collectionFilters) : [],
+        navigation: collection.navigation ? JSON.parse(collection.navigation) : { screenName: "", searchString: "" },
+        image: collection.image,
+        column: collection.column || 1,
+        buttonTitle: collection.button || "null",
+        scrollable: collection.isScrollable
+      })),
+      additionalData: group.additionalData ? JSON.parse(group.additionalData) : null
+    }));
+
+    res.json(middlewareFormat);
+  } catch (error: any) {
+    console.error(`Error fetching page by slug:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Home & Shop Page
 app.get("/api/home-shop-page", async (req, res) => {
   const page = await prisma.homeShopPage.findFirst();
