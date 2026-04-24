@@ -96,12 +96,20 @@ export default function App() {
     );
   }
 
+  // Show landing page if not authenticated
   if (!isAuthenticated) {
     if (showLogin) {
       return <LoginPage onBack={() => setShowLogin(false)} />;
     }
     return <LandingPage onGetStarted={() => setShowLogin(true)} />;
   }
+  
+  // If authenticated but wants to see landing page, show logout option
+  const handleBackToLanding = () => {
+    if (window.confirm('Logout and return to landing page?')) {
+      handleLogout();
+    }
+  };
 
   const navigateToEditor = (pageId: string) => {
     setSelectedPageId(pageId);
@@ -136,7 +144,7 @@ export default function App() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#E5E5E5] flex flex-col shrink-0">
         <div className="p-6 border-bottom border-[#E5E5E5]">
-          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors" onClick={handleBackToLanding} title="Back to Landing Page">
             <Smartphone className="w-6 h-6 text-blue-600" />
             AppBuilder
           </h1>
