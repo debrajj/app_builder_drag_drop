@@ -1,93 +1,107 @@
 #!/bin/bash
-# Complete fix and deployment script
-# Run this on your EC2 server
 
+# Fix and deploy script
 set -e
 
-echo "🔧 Fixing and deploying App Builder..."
+SERVER_IP="43.205.214.197"
+SSH_KEY="/Users/debrajroy/Downloads/multi-vender.pem"
+SERVER_USER="ubuntu"
 
-# Stop any existing process
-echo "Stopping existing process..."
-pm2 delete appbuilder 2>/dev/null || true
+echo "🔧 Fixing and deploying..."
+echo ""
 
-# Go to app directory
-cd ~/appbuilder
+ssh -i "$SSH_KEY" "$SERVER_USER@$SERVER_IP" bash << 'ENDSSH'
+set -e
 
-# Update package.json with start script
-echo "Updating package.json..."
-cat > package.json << 'EOF'
-{
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "prisma db push && tsx server.ts",
-    "build": "prisma generate && prisma db push && vite build",
-    "start": "NODE_ENV=production tsx server.ts",
-    "postinstall": "prisma generate",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
-  "dependencies": {
-    "@google/genai": "^1.29.0",
-    "@prisma/client": "^6.4.1",
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
-    "axios": "^1.14.0",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "prisma": "^6.4.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "sonner": "^2.0.7",
-    "vite": "^6.2.0",
-    "zustand": "^5.0.12"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
-    "autoprefixer": "^10.4.21",
-    "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
-}
-EOF
+APP_DIR="/var/www/appbuilder"
+PM2_APP_NAME="appbuilder"
 
-# Install dependencies
-echo "Installing dependencies..."
+echo "🗑️  Removing old directory..."
+sudo rm -rf $APP_DIR
+
+echo "📁 Creating fresh directory..."
+sudo mkdir -p /var/www
+cd /var/www
+
+echo "📥 Cloning repository..."
+sudo git clone https://github.com/debrajj/app_builder_drag_drop.git appbuilder
+sudo chown -R ubuntu:ubuntu $APP_DIR
+
+cd $APP_DIR
+
+echo "📦 Installing dependencies..."
 npm install
 
-# Build application
-echo "Building application..."
+echo "📝 Setting up environment..."
+cat > .env << 'EOF'
+DATABASE_URL="postgresql://postgres:v4HmYtmNgvsVkRrB81AT@family-tree-db.cuafddu82hzq.ap-south-1.rds.amazonaws.com:5432/page_builder_app?schema=public"
+PORT=3002
+NODE_ENV=production
+VITE_API_BASE_URL=http://43.205.214.197:3002
+ALLOWED_ORIGINS=*
+JWT_SECRET="prod-jwt-secret-change-this-12345"
+EOF
+
+echo "🗄️  Setting up database..."
+npx prisma generate
+npx prisma db push --accept-data-loss
+
+echo "👥 Creating user and assigning data..."
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const prisma = new PrismaClient();
+
+(async () => {
+  try {
+    const password = await bcrypt.hash('12345', 10);
+    const user = await prisma.customer.upsert({
+      where: { email: 'test@gmail.com' },
+      update: { password },
+      create: {
+        email: 'test@gmail.com',
+        password: password,
+        name: 'Test User',
+        role: 'customer'
+      }
+    });
+    console.log('✅ User created:', user.email);
+    
+    const pages = await prisma.page.updateMany({ data: { customerId: user.id } });
+    const stores = await prisma.store.updateMany({ data: { customerId: user.id } });
+    const colors = await prisma.productColor.updateMany({ data: { customerId: user.id } });
+    const media = await prisma.media.updateMany({ data: { customerId: user.id } });
+    
+    console.log('✅ Assigned:', pages.count, 'pages,', stores.count, 'stores,', colors.count, 'colors,', media.count, 'media');
+  } catch (e) {
+    console.error('Error:', e.message);
+  } finally {
+    await prisma.\$disconnect();
+  }
+})();
+"
+
+echo "🔨 Building application..."
 npm run build
 
-# Start with PM2
-echo "Starting application..."
-pm2 start npm --name "appbuilder" -- start
+echo "🔄 Setting up PM2..."
+if ! command -v pm2 &> /dev/null; then
+    sudo npm install -g pm2
+fi
 
-# Save PM2 config
+pm2 stop $PM2_APP_NAME 2>/dev/null || true
+pm2 delete $PM2_APP_NAME 2>/dev/null || true
+pm2 start npm --name $PM2_APP_NAME -- start
 pm2 save
 
+echo "✅ Done!"
+ENDSSH
+
 echo ""
-echo "✅ Deployment complete!"
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║              🎉 DEPLOYMENT COMPLETE!                       ║"
+echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
-echo "Check status:"
-echo "  pm2 status"
+echo "🌐 Visit: http://43.205.214.197:3002"
+echo "🔑 Login: test@gmail.com / 12345"
 echo ""
-echo "View logs:"
-echo "  pm2 logs appbuilder"
-echo ""
-echo "Test locally:"
-echo "  curl http://localhost:3002"
-echo ""
-echo "⚠️  Don't forget to open port 3002 in AWS Security Group!"
-echo "Then access: http://43.205.214.197:3002"
