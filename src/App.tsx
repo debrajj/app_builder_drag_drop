@@ -33,7 +33,8 @@ import {
   ExternalLink,
   Search,
   Upload,
-  Palette as ColorIcon
+  Palette as ColorIcon,
+  LogOut
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { PageEditor } from './components/PageEditor';
@@ -43,22 +44,64 @@ import { StoreManager } from './components/StoreManager';
 import { ProductColorManager } from './components/ProductColorManager';
 import { MediaLibrary } from './components/MediaLibrary';
 import { Dashboard } from './components/Dashboard';
+import { LoginPage } from './components/LoginPage';
+import { LandingPage } from './components/LandingPage';
 
 type Module = 'dashboard' | 'editor' | 'settings' | 'styles' | 'stores' | 'colors' | 'media';
 
 export default function App() {
   const [activeModule, setActiveModule] = useState<Module>('dashboard');
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
-  const { fetchPages, fetchGlobalSettings, fetchGlobalStyles, fetchStores, fetchProductColors, fetchMedia } = useStore();
+  const [showLogin, setShowLogin] = useState(false);
+  const { 
+    isAuthenticated, 
+    user, 
+    checkAuth, 
+    logout,
+    fetchPages, 
+    fetchGlobalSettings, 
+    fetchGlobalStyles, 
+    fetchStores, 
+    fetchProductColors, 
+    fetchMedia 
+  } = useStore();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    fetchPages();
-    fetchGlobalSettings();
-    fetchGlobalStyles();
-    fetchStores();
-    fetchProductColors();
-    fetchMedia();
+    checkAuth().finally(() => setAuthChecked(true));
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPages();
+      fetchGlobalSettings();
+      fetchGlobalStyles();
+      fetchStores();
+      fetchProductColors();
+      fetchMedia();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogout = () => {
+    logout();
+    setShowLogin(false);
+    toast.success('Logged out successfully');
+  };
+
+  if (!authChecked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#181826]">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    if (showLogin) {
+      return <LoginPage onBack={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />;
+  }
 
   const navigateToEditor = (pageId: string) => {
     setSelectedPageId(pageId);
@@ -143,6 +186,19 @@ export default function App() {
           <div className="text-xs text-[#999] flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             Connected to Middleware
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-[#666]">
+              <div className="font-medium">{user?.name}</div>
+              <div className="text-[10px] text-[#999]">{user?.email}</div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-[#999] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>

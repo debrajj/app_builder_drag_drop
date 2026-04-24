@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function LoginPage() {
+interface LoginPageProps {
+  onBack?: () => void;
+}
+
+export function LoginPage({ onBack }: LoginPageProps) {
   const { login } = useStore();
-  const [email, setEmail] = useState('debrajecomcure@gmail.com');
-  const [password, setPassword] = useState('Welcome@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please enter email and password');
+      return;
+    }
+    
     setLoading(true);
     try {
       await login(email, password);
       toast.success('Logged in successfully');
-    } catch (error) {
-      toast.error('Invalid credentials');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
@@ -26,6 +36,16 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#181826] flex flex-col items-center justify-center p-4">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-6 left-6 text-[#A5A5BA] hover:text-white transition-colors flex items-center gap-2"
+        >
+          <ArrowLeft size={20} />
+          <span>Back to Home</span>
+        </button>
+      )}
+      
       <div className="w-full max-w-[480px] bg-[#212134] rounded-lg shadow-2xl overflow-hidden p-10">
         <div className="flex flex-col items-center mb-8">
           <div className="bg-white px-6 py-3 rounded mb-6">

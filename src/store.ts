@@ -48,6 +48,14 @@ interface AppState {
   productColors: ProductColor[];
   media: Media[];
   loading: boolean;
+  isAuthenticated: boolean;
+  user: { id: string; email: string; name: string; role: string } | null;
+  token: string | null;
+  
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => void;
+  checkAuth: () => Promise<void>;
   
   fetchPages: () => Promise<void>;
   fetchPage: (id: string) => Promise<void>;
@@ -98,6 +106,49 @@ export const useStore = create<AppState>((set, get) => ({
   productColors: [],
   media: [],
   loading: false,
+  isAuthenticated: false,
+  user: null,
+  token: localStorage.getItem('token'),
+
+  login: async (email: string, password: string) => {
+    const res = await api.post('/api/auth/login', { email, password });
+    const { token, user } = res.data;
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    set({ isAuthenticated: true, user, token });
+  },
+
+  register: async (email: string, password: string, name: string) => {
+    const res = await api.post('/api/auth/register', { email, password, name });
+    const { token, user } = res.data;
+    localStorage.setItem('token', token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    set({ isAuthenticated: true, user, token });
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
+    set({ isAuthenticated: false, user: null, token: null, pages: [], currentPage: null });
+  },
+
+  checkAuth: async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      set({ isAuthenticated: false, user: null });
+      return;
+    }
+    
+    try {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const res = await api.get('/api/auth/me');
+      set({ isAuthenticated: true, user: res.data, token });
+    } catch (error) {
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      set({ isAuthenticated: false, user: null, token: null });
+    }
+  },
 
   fetchPages: async () => {
     set({ loading: true });

@@ -4,6 +4,9 @@ import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { fileURLToPath } from "url";
 import axios from "axios";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { authenticateToken, optionalAuth, AuthRequest } from "./auth-middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +15,7 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const BASE_PATH = process.env.BASE_PATH || '';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*')
   .split(',')
   .map(origin => origin.trim())
@@ -40,14 +44,115 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Routes
-app.get(`${BASE_PATH}/api/pages`, async (req, res) => {
+// Authentication Routes
+app.post("/api/auth/register", async (req, res) => {
   try {
+    const { email, password, name } = req.body;
+
+    // Check if user already exists
+    const existingUser = await prisma.customer.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const customer = await prisma.customer.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role: 'customer'
+      }
+    });
+
+    // Generate token
+    const token = jwt.sign(
+      { id: customer.id, email: customer.email, role: customer.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        role: customer.role
+      }
+    });
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user
+    const customer = await prisma.customer.findUnique({ where: { email } });
+    if (!customer) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, customer.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { id: customer.id, email: customer.email, role: customer.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        role: customer.role
+      }
+    });
+  } catch (error: any) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const customer = await prisma.customer.findUnique({
+      where: { id: req.user!.id },
+      select: { id: true, email: true, name: true, role: true, createdAt: true }
+    });
+    res.json(customer);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API Routes
+app.get(`${BASE_PATH}/api/pages`, authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const whereClause = req.user!.role === 'admin' 
+      ? {} 
+      : { customerId: req.user!.id };
+    
     const pages = await prisma.page.findMany({
+      where: whereClause,
       include: { collectionGroups: { include: { collections: { include: { items: true } } } } },
       orderBy: { updatedAt: 'desc' }
     });
-    console.log(`Fetched ${pages.length} pages from database`);
+    console.log(`Fetched ${pages.length} pages from database for user ${req.user!.email}`);
     res.json(Array.isArray(pages) ? pages : []);
   } catch (error: any) {
     console.error("Prisma Error in /api/pages:", error);
@@ -55,24 +160,50 @@ app.get(`${BASE_PATH}/api/pages`, async (req, res) => {
   }
 });
 
-app.post("/api/pages", async (req, res) => {
+app.post("/api/pages", authenticateToken, async (req: AuthRequest, res) => {
   const { name, slug } = req.body;
   const page = await prisma.page.create({
-    data: { name, slug: slug || name.toLowerCase().replace(/ /g, '-') }
+    data: { 
+      name, 
+      slug: slug || name.toLowerCase().replace(/ /g, '-'),
+      customerId: req.user!.id
+    }
   });
   res.json(page);
 });
 
-app.get("/api/pages/:id", async (req, res) => {
-  const page = await prisma.page.findUnique({
-    where: { id: req.params.id },
+app.get("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
+  const whereClause = req.user!.role === 'admin'
+    ? { id: req.params.id }
+    : { id: req.params.id, customerId: req.user!.id };
+    
+  const page = await prisma.page.findFirst({
+    where: whereClause,
     include: { collectionGroups: { include: { collections: { include: { items: true } } } } }
   });
+  
+  if (!page) {
+    return res.status(404).json({ error: 'Page not found or access denied' });
+  }
+  
   res.json(page);
 });
 
-app.put("/api/pages/:id", async (req, res) => {
+app.put("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
   const { name, slug, status } = req.body;
+  
+  // Check ownership
+  const existingPage = await prisma.page.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingPage) {
+    return res.status(404).json({ error: 'Page not found or access denied' });
+  }
+  
   const page = await prisma.page.update({
     where: { id: req.params.id },
     data: { name, slug, status }
@@ -80,13 +211,25 @@ app.put("/api/pages/:id", async (req, res) => {
   res.json(page);
 });
 
-app.delete("/api/pages/:id", async (req, res) => {
+app.delete("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
+  // Check ownership
+  const existingPage = await prisma.page.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingPage) {
+    return res.status(404).json({ error: 'Page not found or access denied' });
+  }
+  
   await prisma.page.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collection Groups
-app.post("/api/collection-groups", async (req, res) => {
+app.post("/api/collection-groups", authenticateToken, async (req, res) => {
   const { name, style, pageId, order } = req.body;
   const group = await prisma.collectionGroup.create({
     data: { name, style, pageId, order: order || 0 }
@@ -94,7 +237,7 @@ app.post("/api/collection-groups", async (req, res) => {
   res.json(group);
 });
 
-app.put("/api/collection-groups/:id", async (req, res) => {
+app.put("/api/collection-groups/:id", authenticateToken, async (req, res) => {
   const { name, style, backgroundImage, reference, additionalData, status, order } = req.body;
   const group = await prisma.collectionGroup.update({
     where: { id: req.params.id },
@@ -103,13 +246,13 @@ app.put("/api/collection-groups/:id", async (req, res) => {
   res.json(group);
 });
 
-app.delete("/api/collection-groups/:id", async (req, res) => {
+app.delete("/api/collection-groups/:id", authenticateToken, async (req, res) => {
   await prisma.collectionGroup.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collections
-app.post("/api/collections", async (req, res) => {
+app.post("/api/collections", authenticateToken, async (req, res) => {
   const { name, style, groupId, order } = req.body;
   const collection = await prisma.collection.create({
     data: { name, style, groupId, order: order || 0 }
@@ -117,7 +260,7 @@ app.post("/api/collections", async (req, res) => {
   res.json(collection);
 });
 
-app.put("/api/collections/:id", async (req, res) => {
+app.put("/api/collections/:id", authenticateToken, async (req, res) => {
   const { name, link, shopifyId, collectionType, isScrollable, style, horizontal, additionalData, navigation, image, column, button, collectionFilters, status, order } = req.body;
   const collection = await prisma.collection.update({
     where: { id: req.params.id },
@@ -126,13 +269,13 @@ app.put("/api/collections/:id", async (req, res) => {
   res.json(collection);
 });
 
-app.delete("/api/collections/:id", async (req, res) => {
+app.delete("/api/collections/:id", authenticateToken, async (req, res) => {
   await prisma.collection.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Collection Items
-app.post("/api/collection-items", async (req, res) => {
+app.post("/api/collection-items", authenticateToken, async (req, res) => {
   const { name, style, collectionId, order } = req.body;
   const item = await prisma.collectionItem.create({
     data: { name, style, collectionId, order: order || 0 }
@@ -140,7 +283,7 @@ app.post("/api/collection-items", async (req, res) => {
   res.json(item);
 });
 
-app.put("/api/collection-items/:id", async (req, res) => {
+app.put("/api/collection-items/:id", authenticateToken, async (req, res) => {
   const { name, images, text1, text2, text3, link, shopifyId, style, media, additionalData, reference, navigation, button, status, order } = req.body;
   const item = await prisma.collectionItem.update({
     where: { id: req.params.id },
@@ -149,7 +292,7 @@ app.put("/api/collection-items/:id", async (req, res) => {
   res.json(item);
 });
 
-app.delete("/api/collection-items/:id", async (req, res) => {
+app.delete("/api/collection-items/:id", authenticateToken, async (req, res) => {
   await prisma.collectionItem.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
@@ -214,55 +357,133 @@ app.post("/api/global-settings", async (req, res) => {
 });
 
 // Stores
-app.get("/api/stores", async (req, res) => {
-  const stores = await prisma.store.findMany({ orderBy: { storePosition: 'asc' } });
+app.get("/api/stores", authenticateToken, async (req: AuthRequest, res) => {
+  const whereClause = req.user!.role === 'admin' 
+    ? {} 
+    : { customerId: req.user!.id };
+    
+  const stores = await prisma.store.findMany({ 
+    where: whereClause,
+    orderBy: { storePosition: 'asc' } 
+  });
   res.json(stores);
 });
 
-app.post("/api/stores", async (req, res) => {
-  const store = await prisma.store.create({ data: req.body });
+app.post("/api/stores", authenticateToken, async (req: AuthRequest, res) => {
+  const store = await prisma.store.create({ 
+    data: { ...req.body, customerId: req.user!.id } 
+  });
   res.json(store);
 });
 
-app.put("/api/stores/:id", async (req, res) => {
-  const store = await prisma.store.update({ where: { id: req.params.id }, data: req.body });
+app.put("/api/stores/:id", authenticateToken, async (req: AuthRequest, res) => {
+  // Check ownership
+  const existingStore = await prisma.store.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingStore) {
+    return res.status(404).json({ error: 'Store not found or access denied' });
+  }
+  
+  const store = await prisma.store.update({ 
+    where: { id: req.params.id }, 
+    data: req.body 
+  });
   res.json(store);
 });
 
-app.delete("/api/stores/:id", async (req, res) => {
+app.delete("/api/stores/:id", authenticateToken, async (req: AuthRequest, res) => {
+  // Check ownership
+  const existingStore = await prisma.store.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingStore) {
+    return res.status(404).json({ error: 'Store not found or access denied' });
+  }
+  
   await prisma.store.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Product Colors
-app.get("/api/product-colors", async (req, res) => {
-  const colors = await prisma.productColor.findMany();
+app.get("/api/product-colors", authenticateToken, async (req: AuthRequest, res) => {
+  const whereClause = req.user!.role === 'admin' 
+    ? {} 
+    : { customerId: req.user!.id };
+    
+  const colors = await prisma.productColor.findMany({ where: whereClause });
   res.json(colors);
 });
 
-app.post("/api/product-colors", async (req, res) => {
-  const color = await prisma.productColor.create({ data: req.body });
+app.post("/api/product-colors", authenticateToken, async (req: AuthRequest, res) => {
+  const color = await prisma.productColor.create({ 
+    data: { ...req.body, customerId: req.user!.id } 
+  });
   res.json(color);
 });
 
-app.put("/api/product-colors/:id", async (req, res) => {
-  const color = await prisma.productColor.update({ where: { id: req.params.id }, data: req.body });
+app.put("/api/product-colors/:id", authenticateToken, async (req: AuthRequest, res) => {
+  // Check ownership
+  const existingColor = await prisma.productColor.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingColor) {
+    return res.status(404).json({ error: 'Product color not found or access denied' });
+  }
+  
+  const color = await prisma.productColor.update({ 
+    where: { id: req.params.id }, 
+    data: req.body 
+  });
   res.json(color);
 });
 
-app.delete("/api/product-colors/:id", async (req, res) => {
+app.delete("/api/product-colors/:id", authenticateToken, async (req: AuthRequest, res) => {
+  // Check ownership
+  const existingColor = await prisma.productColor.findFirst({
+    where: { 
+      id: req.params.id,
+      ...(req.user!.role !== 'admin' && { customerId: req.user!.id })
+    }
+  });
+  
+  if (!existingColor) {
+    return res.status(404).json({ error: 'Product color not found or access denied' });
+  }
+  
   await prisma.productColor.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
 
 // Media
-app.get("/api/media", async (req, res) => {
-  const media = await prisma.media.findMany({ orderBy: { createdAt: 'desc' } });
+app.get("/api/media", authenticateToken, async (req: AuthRequest, res) => {
+  const whereClause = req.user!.role === 'admin' 
+    ? {} 
+    : { customerId: req.user!.id };
+    
+  const media = await prisma.media.findMany({ 
+    where: whereClause,
+    orderBy: { createdAt: 'desc' } 
+  });
   res.json(media);
 });
 
-app.post("/api/media", async (req, res) => {
-  const media = await prisma.media.create({ data: req.body });
+app.post("/api/media", authenticateToken, async (req: AuthRequest, res) => {
+  const media = await prisma.media.create({ 
+    data: { ...req.body, customerId: req.user!.id } 
+  });
   res.json(media);
 });
 
