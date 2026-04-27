@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { Page, SectionStyle, CollectionStyle, CollectionItemStyle } from '../types';
 import { Smartphone, ChevronRight, Star, ShoppingCart, Search, Menu, Heart, Video } from 'lucide-react';
 
-export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'published' }) {
+export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 'draft' | 'published', onSelectItem?: (id: string, type: 'group' | 'collection' | 'item') => void }) {
   const { globalStyles } = useStore();
   const [bannerSlides, setBannerSlides] = useState<Map<string, number>>(new Map());
   const [selectedStore, setSelectedStore] = useState<any>(null);
@@ -32,10 +32,17 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
     const isDirectVideo = item.media && (item.media.endsWith('.mp4') || item.media.endsWith('.webm'));
     const isEmbedVideo = isVideo && !isDirectVideo;
     
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onSelectItem) {
+        onSelectItem(item.id, 'item');
+      }
+    };
+    
     switch (item.style) {
       case CollectionItemStyle.CIR_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="flex flex-col items-center gap-1 shrink-0 w-16">
+          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isVideo && (
@@ -50,7 +57,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.BANNER_COLLECTION_ITEM:
       case CollectionItemStyle.VIDEO_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full aspect-[16/9] bg-gray-200 rounded-xl overflow-hidden shrink-0 relative">
+          <div key={item.id} onClick={handleClick} className="w-full aspect-[16/9] bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
             {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             {isDirectVideo && (
               <video 
@@ -82,7 +89,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.REC_COLLECTION_ITEM:
       case CollectionItemStyle.SLIDER_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="h-2/3 bg-gray-100 relative">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isDirectVideo && (
@@ -123,7 +130,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.TI_COLLECTION_ITEM:
       case CollectionItemStyle.TI_COLLECTION_ITEM_V2:
         return (
-          <div key={item.id} className="flex flex-col items-center gap-1 shrink-0 px-4 py-2 bg-white rounded-lg border border-gray-50 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 shrink-0 px-4 py-2 bg-white rounded-lg border border-gray-50 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
               {item.media && !isVideo ? <img src={item.media} alt={item.name} className="w-5 h-5 object-contain" /> : <Star className="w-4 h-4" />}
             </div>
@@ -132,7 +139,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.STORE_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-32 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-32 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100 relative">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -143,7 +150,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.GRID_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-[calc(50%-8px)] bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-[calc(50%-8px)] bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100 relative">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -155,7 +162,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.VOC_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-64 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-64 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
               {item.media && <img src={item.media} alt={item.name} className="w-8 h-8 rounded-full object-cover" />}
               <div>
@@ -170,13 +177,13 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.TAB_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="px-4 py-2 bg-white rounded-lg border border-gray-200 shrink-0">
+          <div key={item.id} onClick={handleClick} className="px-4 py-2 bg-white rounded-lg border border-gray-200 shrink-0 cursor-pointer hover:bg-gray-50 transition-colors">
             <span className="text-xs font-bold">{item.name}</span>
           </div>
         );
       case CollectionItemStyle.LANDING_PAGE_BANNER_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full aspect-[2/1] bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl overflow-hidden shrink-0 relative">
+          <div key={item.id} onClick={handleClick} className="w-full aspect-[2/1] bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
             {item.media && (
               <>
                 <img src={item.media} alt={item.name} className="w-full h-full object-cover absolute inset-0" />
@@ -196,7 +203,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.IMAGE_WITH_TEXT_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex gap-3 p-3">
+          <div key={item.id} onClick={handleClick} className="w-full bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex gap-3 p-3 cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden shrink-0">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -209,7 +216,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.IMAGE_WITH_TEXT_BREAKER_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-full bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4 p-4">
               <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shrink-0 shadow-sm">
                 {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
@@ -225,7 +232,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.CATEGORY_STYLE_COLLECTION_ITEM:
       case CollectionItemStyle.CATEGORY_TAB_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="flex flex-col items-center gap-2 shrink-0 w-20">
+          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-2 shrink-0 w-20 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden border-2 border-white shadow-md">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -235,7 +242,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.BY_PRICE_COLLECTION_ITEM:
       case CollectionItemStyle.BY_OCCASION_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-40 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-40 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100 relative">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-3">
@@ -246,7 +253,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.SHOP_LOOK_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-48 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-48 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-[3/4] bg-gray-100 relative">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
@@ -263,7 +270,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.TOP_PRODUCTS_LIST_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full bg-white rounded-lg p-3 border border-gray-100 flex gap-3">
+          <div key={item.id} onClick={handleClick} className="w-full bg-white rounded-lg p-3 border border-gray-100 flex gap-3 cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -283,7 +290,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.PRODUCTS_WITH_TABS_COLLECTION_ITEM:
       case CollectionItemStyle.PRODUCTS_WITHOUT_TABS_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -295,7 +302,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.CX_REVIEW_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-72 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-72 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-start gap-3">
               {item.media && <img src={item.media} alt={item.name} className="w-12 h-12 rounded-full object-cover" />}
               <div className="flex-1">
@@ -311,7 +318,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       case CollectionItemStyle.RECENTLY_VIEWED_COLLECTION_ITEM:
       case CollectionItemStyle.REC_COLLECTION_ITEM_NEW_ARRIVAL:
         return (
-          <div key={item.id} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+          <div key={item.id} onClick={handleClick} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -324,7 +331,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.FOOTER_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="flex flex-col items-center gap-1">
+          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
             {item.media ? (
               <img src={item.media} alt={item.name} className="w-5 h-5 object-contain" />
             ) : (
@@ -335,7 +342,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       case CollectionItemStyle.COLLECTION_VIDEO_COLLECTION_ITEM:
         return (
-          <div key={item.id} className="w-full aspect-video bg-gray-200 rounded-xl overflow-hidden shrink-0 relative">
+          <div key={item.id} onClick={handleClick} className="w-full aspect-video bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
             {isDirectVideo && (
               <video 
                 src={item.media} 
@@ -364,7 +371,7 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
         );
       default:
         return (
-          <div key={item.id} className="p-2 bg-gray-50 rounded border border-gray-100 text-[10px]">
+          <div key={item.id} onClick={handleClick} className="p-2 bg-gray-50 rounded border border-gray-100 text-[10px] cursor-pointer hover:bg-gray-100 transition-colors">
             {item.name}
           </div>
         );
@@ -376,10 +383,17 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
     const isBannerCollection = collection.style === 'BANNER_COLLECTION' && items.length > 1;
     const currentSlide = bannerSlides.get(collection.id) || 0;
     
+    const handleCollectionClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onSelectItem) {
+        onSelectItem(collection.id, 'collection');
+      }
+    };
+    
     return (
       <div key={collection.id} className="space-y-3">
         {collection.name && (
-          <div className="flex items-center justify-between px-4">
+          <div onClick={handleCollectionClick} className="flex items-center justify-between px-4 cursor-pointer hover:bg-gray-50 rounded-lg py-1 transition-colors">
             <h3 className="text-base font-bold text-gray-900">{collection.name}</h3>
             {collection.link && <button className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5">View All <ChevronRight className="w-3 h-3" /></button>}
           </div>
@@ -566,8 +580,15 @@ export function MobilePreview({ data, mode }: { data: Page, mode: 'draft' | 'pub
       );
     }
     
+    const handleGroupClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onSelectItem) {
+        onSelectItem(group.id, 'group');
+      }
+    };
+    
     return (
-      <section key={group.id} className="py-6 space-y-6 border-b border-gray-50 last:border-0" style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
+      <section key={group.id} onClick={handleGroupClick} className="py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-colors" style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
         {group.collections.map(renderCollection)}
       </section>
     );

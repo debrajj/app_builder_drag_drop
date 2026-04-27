@@ -769,7 +769,14 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
         {showPreview && (
           <aside className="w-[450px] bg-gray-100 border-l border-[#E5E5E5] flex flex-col items-center justify-center p-8 overflow-y-auto">
             <div className="sticky top-8">
-              <MobilePreview data={currentPage} mode={previewMode} />
+              <MobilePreview 
+                data={currentPage} 
+                mode={previewMode} 
+                onSelectItem={(id, type) => {
+                  setSelectedId(id);
+                  setSelectedType(type);
+                }}
+              />
             </div>
           </aside>
         )}
