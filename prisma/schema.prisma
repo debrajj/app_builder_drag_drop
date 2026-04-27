@@ -155,7 +155,10 @@ model Customer {
   email     String   @unique
   password  String
   name      String
-  role      String   @default("customer")
+  role      String   @default("customer") // customer, admin
+  status    String   @default("active") // active, inactive, suspended
+  phone     String?
+  lastLogin DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   pages     Page[]

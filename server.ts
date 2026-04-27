@@ -7,6 +7,7 @@ import axios from "axios";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authenticateToken, optionalAuth, AuthRequest } from "./auth-middleware.js";
+import adminRoutes from "./admin-routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Admin Routes
+app.use("/api/admin", adminRoutes);
 
 // Authentication Routes
 app.post("/api/auth/register", async (req, res) => {
@@ -100,11 +104,22 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Check if user is active
+    if (customer.status !== 'active') {
+      return res.status(403).json({ error: 'Account is inactive or suspended' });
+    }
+
     // Verify password
     const validPassword = await bcrypt.compare(password, customer.password);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Update last login
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { lastLogin: new Date() }
+    });
 
     // Generate token
     const token = jwt.sign(
