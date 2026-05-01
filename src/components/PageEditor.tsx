@@ -31,10 +31,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobilePreview } from './MobilePreview';
+import { DraggableSectionList } from './DraggableSectionList';
 import { SectionStyle, CollectionStyle, CollectionItemStyle, NavigationScreen, CollectionTypePreset } from '../types';
 
 export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => void }) {
-  const { currentPage, fetchPage, updatePage, addCollectionGroup, updateCollectionGroup, deleteCollectionGroup, addCollection, updateCollection, deleteCollection, addCollectionItem, updateCollectionItem, deleteCollectionItem } = useStore();
+  const { currentPage, fetchPage, updatePage, addCollectionGroup, updateCollectionGroup, deleteCollectionGroup, reorderCollectionGroups, addCollection, updateCollection, deleteCollection, addCollectionItem, updateCollectionItem, deleteCollectionItem } = useStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<'group' | 'collection' | 'item' | null>(null);
   const [showPreview, setShowPreview] = useState(true);
@@ -204,87 +205,74 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
             </button>
           </div>
 
-          <div className="space-y-2">
-            {currentPage.collectionGroups.map(group => {
-              // Get icon based on style
-              const getGroupIcon = (style: string) => {
-                if (style.includes('FOOTER')) return '📍';
-                if (style.includes('VIDEO')) return '🎥';
-                if (style.includes('BANNER')) return '🖼️';
-                if (style.includes('GRID')) return '▦';
-                if (style.includes('STORE')) return '🏪';
-                if (style.includes('CATEGORY')) return '🏷️';
-                return '📄';
-              };
-              
-              return (
-                <div key={group.id} className="space-y-1">
-                  <div 
-                    onClick={() => { setSelectedId(group.id); setSelectedType('group'); }}
-                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedId === group.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#1A1A1A]'}`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="text-sm">{getGroupIcon(group.style)}</span>
-                      <Layers className="w-4 h-4 shrink-0" />
-                      <span className="text-sm font-medium truncate">{group.name}</span>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); handleAddCollection(group.id); }} className="p-1 hover:bg-blue-100 rounded">
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  
-                  <div className="pl-4 space-y-1 border-l border-[#E5E5E5] ml-4">
-                    {group.collections.map(collection => {
-                      // Get icon based on collection style
-                      const getCollectionIcon = (style: string) => {
-                        if (style.includes('FOOTER')) return '📍';
-                        if (style.includes('VIDEO')) return '🎥';
-                        if (style.includes('BANNER')) return '🖼️';
-                        if (style.includes('SLIDER')) return '📱';
-                        if (style.includes('GRID')) return '▦';
-                        if (style.includes('STORE')) return '🏪';
-                        if (style.includes('CATEGORY')) return '🏷️';
-                        if (style.includes('REVIEW') || style.includes('VOC')) return '💬';
-                        if (style.includes('CIR')) return '⭕';
-                        return '📦';
-                      };
-                      
-                      return (
-                        <div key={collection.id} className="space-y-1">
-                          <div 
-                            onClick={() => { setSelectedId(collection.id); setSelectedType('collection'); }}
-                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedId === collection.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#666]'}`}
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <span className="text-xs">{getCollectionIcon(collection.style)}</span>
-                              <Box className="w-4 h-4 shrink-0" />
-                              <span className="text-sm truncate">{collection.name}</span>
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); handleAddItem(collection.id); }} className="p-1 hover:bg-blue-100 rounded">
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </div>
-                          
-                          <div className="pl-4 space-y-1 border-l border-[#E5E5E5] ml-4">
-                            {collection.items.map(item => (
-                              <div 
-                                key={item.id}
-                                onClick={() => { setSelectedId(item.id); setSelectedType('item'); }}
-                                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${selectedId === item.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#999]'}`}
-                              >
-                                <Type className="w-3 h-3 shrink-0" />
-                                <span className="text-xs truncate">{item.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs text-blue-700">
+              🎯 <strong>Drag & Drop:</strong> Grab the grip icon to reorder sections!
+            </p>
           </div>
+
+          <DraggableSectionList
+            groups={currentPage.collectionGroups.sort((a, b) => a.order - b.order)}
+            selectedId={selectedId}
+            onSelectGroup={(id) => { setSelectedId(id); setSelectedType('group'); }}
+            onAddCollection={handleAddCollection}
+            onReorder={(reorderedGroups) => {
+              reorderCollectionGroups(reorderedGroups);
+              toast.success('Sections reordered successfully');
+            }}
+          />
+
+          {/* Collections and Items for selected group */}
+          {selectedType === 'group' && selectedId && currentPage.collectionGroups.find(g => g.id === selectedId) && (
+            <div className="mt-4 space-y-2">
+              {currentPage.collectionGroups.find(g => g.id === selectedId)!.collections.map(collection => {
+                // Get icon based on collection style
+                const getCollectionIcon = (style: string) => {
+                  if (style.includes('FOOTER')) return '📍';
+                  if (style.includes('VIDEO')) return '🎥';
+                  if (style.includes('BANNER')) return '🖼️';
+                  if (style.includes('SLIDER')) return '📱';
+                  if (style.includes('GRID')) return '▦';
+                  if (style.includes('STORE')) return '🏪';
+                  if (style.includes('CATEGORY')) return '🏷️';
+                  if (style.includes('REVIEW') || style.includes('VOC')) return '💬';
+                  if (style.includes('CIR')) return '⭕';
+                  return '📦';
+                };
+                
+                return (
+                  <div key={collection.id} className="space-y-1 pl-4 border-l-2 border-blue-200 ml-4">
+                    <div 
+                      onClick={() => { setSelectedId(collection.id); setSelectedType('collection'); }}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedId === collection.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#666]'}`}
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="text-xs">{getCollectionIcon(collection.style)}</span>
+                        <Box className="w-4 h-4 shrink-0" />
+                        <span className="text-sm truncate">{collection.name}</span>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleAddItem(collection.id); }} className="p-1 hover:bg-blue-100 rounded">
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                    
+                    <div className="pl-4 space-y-1 border-l border-[#E5E5E5] ml-4">
+                      {collection.items.map(item => (
+                        <div 
+                          key={item.id}
+                          onClick={() => { setSelectedId(item.id); setSelectedType('item'); }}
+                          className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${selectedId === item.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#999]'}`}
+                        >
+                          <Type className="w-3 h-3 shrink-0" />
+                          <span className="text-xs truncate">{item.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </aside>
 
         {/* Center: Editor */}

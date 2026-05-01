@@ -87,6 +87,7 @@ interface AppState {
   addCollectionGroup: (pageId: string, name: string, style: string) => Promise<void>;
   updateCollectionGroup: (id: string, data: any) => Promise<void>;
   deleteCollectionGroup: (id: string) => Promise<void>;
+  reorderCollectionGroups: (groups: CollectionGroup[]) => Promise<void>;
   
   addCollection: (groupId: string, name: string, style: string) => Promise<void>;
   updateCollection: (id: string, data: any) => Promise<void>;
@@ -283,6 +284,18 @@ export const useStore = create<AppState>((set, get) => ({
 
   deleteCollectionGroup: async (id: string) => {
     await api.delete(`/api/collection-groups/${id}`);
+    if (get().currentPage) {
+      get().fetchPage(get().currentPage!.id);
+    }
+  },
+
+  reorderCollectionGroups: async (groups: CollectionGroup[]) => {
+    // Update all groups with new order
+    await Promise.all(
+      groups.map(group => 
+        api.put(`/api/collection-groups/${group.id}`, { order: group.order })
+      )
+    );
     if (get().currentPage) {
       get().fetchPage(get().currentPage!.id);
     }
