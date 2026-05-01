@@ -15,7 +15,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Layers, Plus, GripVertical, ChevronDown, ChevronRight, Box, Type } from 'lucide-react';
+import { Layers, Plus, GripVertical, ChevronDown, ChevronRight, Box, Type, Video, Grid, Layout, MessageSquare, Circle, Smartphone } from 'lucide-react';
+import { ImageIcon as StoreIcon } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 
 interface CollectionGroup {
@@ -117,7 +119,7 @@ function SortableSection({
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
-          <span className="text-sm">{getGroupIcon(group.style)}</span>
+          {getGroupIcon(group.style)}
           <Layers className="w-4 h-4 shrink-0" />
           <span className="text-sm font-medium truncate">{group.name}</span>
           <span className="text-xs text-gray-400">#{group.order}</span>
@@ -144,7 +146,7 @@ function SortableSection({
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  <span className="text-xs">{getCollectionIcon(collection.style)}</span>
+                  {getCollectionIcon(collection.style)}
                   <Box className="w-4 h-4 shrink-0" />
                   <span className="text-sm truncate">{collection.name}</span>
                 </div>
@@ -202,26 +204,26 @@ export function DraggableSectionList({
   );
 
   const getGroupIcon = (style: string) => {
-    if (style.includes('FOOTER')) return '📍';
-    if (style.includes('VIDEO')) return '🎥';
-    if (style.includes('BANNER')) return '🖼️';
-    if (style.includes('GRID')) return '▦';
-    if (style.includes('STORE')) return '🏪';
-    if (style.includes('CATEGORY')) return '🏷️';
-    return '📄';
+    if (style.includes('FOOTER')) return <Layers className="w-4 h-4 text-gray-600" />;
+    if (style.includes('VIDEO')) return <Video className="w-4 h-4 text-gray-600" />;
+    if (style.includes('BANNER')) return <ImageIcon className="w-4 h-4 text-gray-600" />;
+    if (style.includes('GRID')) return <Grid className="w-4 h-4 text-gray-600" />;
+    if (style.includes('STORE')) return <StoreIcon className="w-4 h-4 text-gray-600" />;
+    if (style.includes('CATEGORY')) return <Layout className="w-4 h-4 text-gray-600" />;
+    return <Layers className="w-4 h-4 text-gray-600" />;
   };
 
   const getCollectionIcon = (style: string) => {
-    if (style.includes('FOOTER')) return '📍';
-    if (style.includes('VIDEO')) return '🎥';
-    if (style.includes('BANNER')) return '🖼️';
-    if (style.includes('SLIDER')) return '📱';
-    if (style.includes('GRID')) return '▦';
-    if (style.includes('STORE')) return '🏪';
-    if (style.includes('CATEGORY')) return '🏷️';
-    if (style.includes('REVIEW') || style.includes('VOC')) return '💬';
-    if (style.includes('CIR')) return '⭕';
-    return '📦';
+    if (style.includes('FOOTER')) return <Layers className="w-4 h-4 text-gray-500" />;
+    if (style.includes('VIDEO')) return <Video className="w-4 h-4 text-gray-500" />;
+    if (style.includes('BANNER')) return <ImageIcon className="w-4 h-4 text-gray-500" />;
+    if (style.includes('SLIDER')) return <Smartphone className="w-4 h-4 text-gray-500" />;
+    if (style.includes('GRID')) return <Grid className="w-4 h-4 text-gray-500" />;
+    if (style.includes('STORE')) return <StoreIcon className="w-4 h-4 text-gray-500" />;
+    if (style.includes('CATEGORY')) return <Layout className="w-4 h-4 text-gray-500" />;
+    if (style.includes('REVIEW') || style.includes('VOC')) return <MessageSquare className="w-4 h-4 text-gray-500" />;
+    if (style.includes('CIR')) return <Circle className="w-4 h-4 text-gray-500" />;
+    return <Box className="w-4 h-4 text-gray-500" />;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {

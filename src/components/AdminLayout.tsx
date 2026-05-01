@@ -1,5 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { BarChart3, Users, Shield } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -18,9 +19,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const menuItems = [
-    { path: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
-    { path: '/admin/users', icon: '👥', label: 'User Management' },
-    { path: '/admin/admins', icon: '🛡️', label: 'Admin Management' },
+    { path: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
+    { path: '/admin/users', icon: Users, label: 'User Management' },
+    { path: '/admin/admins', icon: Shield, label: 'Admin Management' },
   ];
 
   return (
@@ -47,20 +48,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-2">
-            {menuItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  location.pathname === item.path
-                    ? 'bg-indigo-50 text-indigo-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
-              </button>
-            ))}
+            {menuItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    location.pathname === item.path
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                </button>
+              );
+            })}
           </nav>
 
           {/* User Info */}
