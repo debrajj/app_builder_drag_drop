@@ -39,7 +39,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     const isEmbedVideo = isVideo && !isDirectVideo;
     
     const isSelected = selectedId === item.id && selectedType === 'item';
-    const selectedClass = isSelected ? 'ring-4 ring-blue-500 ring-offset-2' : '';
+    const selectedClass = isSelected ? 'bg-blue-50 border-2 border-blue-400' : '';
     
     const handleClick = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -51,7 +51,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     switch (item.style) {
       case CollectionItemStyle.CIR_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-all ${selectedClass}`}>
+          <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-all rounded-lg p-1 ${selectedClass}`}>
             <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isVideo && (
@@ -98,7 +98,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       case CollectionItemStyle.REC_COLLECTION_ITEM:
       case CollectionItemStyle.SLIDER_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className={`w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-all ${selectedClass}`}>
+          <div key={item.id} onClick={handleClick} className={`w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border shadow-sm cursor-pointer hover:shadow-md transition-all ${isSelected ? 'border-blue-400 border-2 bg-blue-50' : 'border-gray-100'}`}>
             <div className="h-2/3 bg-gray-100 relative">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isDirectVideo && (
@@ -393,7 +393,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     const currentSlide = bannerSlides.get(collection.id) || 0;
     
     const isSelected = selectedId === collection.id && selectedType === 'collection';
-    const selectedClass = isSelected ? 'ring-4 ring-green-500 ring-offset-2 bg-green-50' : '';
+    const selectedClass = isSelected ? 'bg-green-50/50 border-l-4 border-green-400 pl-2' : '';
     
     const handleCollectionClick = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -403,7 +403,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     };
     
     return (
-      <div key={collection.id} className={`space-y-3 rounded-lg transition-all ${selectedClass}`}>
+      <div key={collection.id} className={`space-y-3 rounded-lg transition-all py-2 ${selectedClass}`}>
         {collection.name && (
           <div onClick={handleCollectionClick} className="flex items-center justify-between px-4 cursor-pointer hover:bg-gray-50 rounded-lg py-1 transition-colors">
             <h3 className="text-base font-bold text-gray-900">{collection.name}</h3>
@@ -593,7 +593,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     }
     
     const isSelected = selectedId === group.id && selectedType === 'group';
-    const selectedClass = isSelected ? 'ring-4 ring-purple-500 ring-offset-2 bg-purple-50' : '';
+    const selectedClass = isSelected ? 'bg-purple-50/30 border-l-4 border-purple-400' : '';
     
     const handleGroupClick = (e: React.MouseEvent) => {
       e.stopPropagation();
