@@ -3,7 +3,13 @@ import { useStore } from '../store';
 import { Page, SectionStyle, CollectionStyle, CollectionItemStyle } from '../types';
 import { Smartphone, ChevronRight, Star, ShoppingCart, Search, Menu, Heart, Video } from 'lucide-react';
 
-export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 'draft' | 'published', onSelectItem?: (id: string, type: 'group' | 'collection' | 'item') => void }) {
+export function MobilePreview({ data, mode, selectedId, selectedType, onSelectItem }: { 
+  data: Page, 
+  mode: 'draft' | 'published',
+  selectedId?: string | null,
+  selectedType?: 'group' | 'collection' | 'item' | null,
+  onSelectItem?: (id: string, type: 'group' | 'collection' | 'item') => void 
+}) {
   const { globalStyles } = useStore();
   const [bannerSlides, setBannerSlides] = useState<Map<string, number>>(new Map());
   const [selectedStore, setSelectedStore] = useState<any>(null);
@@ -32,6 +38,9 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
     const isDirectVideo = item.media && (item.media.endsWith('.mp4') || item.media.endsWith('.webm'));
     const isEmbedVideo = isVideo && !isDirectVideo;
     
+    const isSelected = selectedId === item.id && selectedType === 'item';
+    const selectedClass = isSelected ? 'ring-4 ring-blue-500 ring-offset-2' : '';
+    
     const handleClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (onSelectItem) {
@@ -42,7 +51,7 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
     switch (item.style) {
       case CollectionItemStyle.CIR_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-opacity">
+          <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-all ${selectedClass}`}>
             <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isVideo && (
@@ -57,7 +66,7 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
       case CollectionItemStyle.BANNER_COLLECTION_ITEM:
       case CollectionItemStyle.VIDEO_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="w-full aspect-[16/9] bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
+          <div key={item.id} onClick={handleClick} className={`w-full aspect-[16/9] bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-all ${selectedClass}`}>
             {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             {isDirectVideo && (
               <video 
@@ -89,7 +98,7 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
       case CollectionItemStyle.REC_COLLECTION_ITEM:
       case CollectionItemStyle.SLIDER_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+          <div key={item.id} onClick={handleClick} className={`w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-all ${selectedClass}`}>
             <div className="h-2/3 bg-gray-100 relative">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isDirectVideo && (
@@ -383,6 +392,9 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
     const isBannerCollection = collection.style === 'BANNER_COLLECTION' && items.length > 1;
     const currentSlide = bannerSlides.get(collection.id) || 0;
     
+    const isSelected = selectedId === collection.id && selectedType === 'collection';
+    const selectedClass = isSelected ? 'ring-4 ring-green-500 ring-offset-2 bg-green-50' : '';
+    
     const handleCollectionClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (onSelectItem) {
@@ -391,7 +403,7 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
     };
     
     return (
-      <div key={collection.id} className="space-y-3">
+      <div key={collection.id} className={`space-y-3 rounded-lg transition-all ${selectedClass}`}>
         {collection.name && (
           <div onClick={handleCollectionClick} className="flex items-center justify-between px-4 cursor-pointer hover:bg-gray-50 rounded-lg py-1 transition-colors">
             <h3 className="text-base font-bold text-gray-900">{collection.name}</h3>
@@ -580,6 +592,9 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
       );
     }
     
+    const isSelected = selectedId === group.id && selectedType === 'group';
+    const selectedClass = isSelected ? 'ring-4 ring-purple-500 ring-offset-2 bg-purple-50' : '';
+    
     const handleGroupClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (onSelectItem) {
@@ -588,7 +603,7 @@ export function MobilePreview({ data, mode, onSelectItem }: { data: Page, mode: 
     };
     
     return (
-      <section key={group.id} onClick={handleGroupClick} className="py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-colors" style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
+      <section key={group.id} onClick={handleGroupClick} className={`py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-all rounded-lg ${selectedClass}`} style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
         {group.collections.map(renderCollection)}
       </section>
     );

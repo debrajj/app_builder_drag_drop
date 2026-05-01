@@ -214,65 +214,17 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
           <DraggableSectionList
             groups={currentPage.collectionGroups.sort((a, b) => a.order - b.order)}
             selectedId={selectedId}
+            selectedType={selectedType}
             onSelectGroup={(id) => { setSelectedId(id); setSelectedType('group'); }}
+            onSelectCollection={(id) => { setSelectedId(id); setSelectedType('collection'); }}
+            onSelectItem={(id) => { setSelectedId(id); setSelectedType('item'); }}
             onAddCollection={handleAddCollection}
+            onAddItem={handleAddItem}
             onReorder={(reorderedGroups) => {
               reorderCollectionGroups(reorderedGroups);
               toast.success('Sections reordered successfully');
             }}
           />
-
-          {/* Collections and Items for selected group */}
-          {selectedType === 'group' && selectedId && currentPage.collectionGroups.find(g => g.id === selectedId) && (
-            <div className="mt-4 space-y-2">
-              {currentPage.collectionGroups.find(g => g.id === selectedId)!.collections.map(collection => {
-                // Get icon based on collection style
-                const getCollectionIcon = (style: string) => {
-                  if (style.includes('FOOTER')) return '📍';
-                  if (style.includes('VIDEO')) return '🎥';
-                  if (style.includes('BANNER')) return '🖼️';
-                  if (style.includes('SLIDER')) return '📱';
-                  if (style.includes('GRID')) return '▦';
-                  if (style.includes('STORE')) return '🏪';
-                  if (style.includes('CATEGORY')) return '🏷️';
-                  if (style.includes('REVIEW') || style.includes('VOC')) return '💬';
-                  if (style.includes('CIR')) return '⭕';
-                  return '📦';
-                };
-                
-                return (
-                  <div key={collection.id} className="space-y-1 pl-4 border-l-2 border-blue-200 ml-4">
-                    <div 
-                      onClick={() => { setSelectedId(collection.id); setSelectedType('collection'); }}
-                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedId === collection.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#666]'}`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-xs">{getCollectionIcon(collection.style)}</span>
-                        <Box className="w-4 h-4 shrink-0" />
-                        <span className="text-sm truncate">{collection.name}</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); handleAddItem(collection.id); }} className="p-1 hover:bg-blue-100 rounded">
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-                    
-                    <div className="pl-4 space-y-1 border-l border-[#E5E5E5] ml-4">
-                      {collection.items.map(item => (
-                        <div 
-                          key={item.id}
-                          onClick={() => { setSelectedId(item.id); setSelectedType('item'); }}
-                          className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${selectedId === item.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#999]'}`}
-                        >
-                          <Type className="w-3 h-3 shrink-0" />
-                          <span className="text-xs truncate">{item.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </aside>
 
         {/* Center: Editor */}
@@ -759,7 +711,9 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
             <div className="sticky top-8">
               <MobilePreview 
                 data={currentPage} 
-                mode={previewMode} 
+                mode={previewMode}
+                selectedId={selectedId}
+                selectedType={selectedType}
                 onSelectItem={(id, type) => {
                   setSelectedId(id);
                   setSelectedType(type);
