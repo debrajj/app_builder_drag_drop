@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import { Page, SectionStyle, CollectionStyle, CollectionItemStyle } from '../types';
-import { Smartphone, ChevronRight, Star, ShoppingCart, Search, Menu, Heart, Video, MapPin, Clock, Phone, Navigation } from 'lucide-react';
+import { Smartphone, ChevronRight, Star, ShoppingCart, Search, Menu, Heart, Video } from 'lucide-react';
 
 export function MobilePreview({ data, mode, selectedId, selectedType, onSelectItem }: { 
   data: Page, 
@@ -562,13 +562,13 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
               <div className="pt-3 border-t border-gray-700 space-y-1">
                 {items[2].text1 && (
                   <div className="flex items-center gap-1.5">
-                    <Phone className="w-3 h-3 text-gray-400" />
+                    <span className="text-[9px] text-gray-400">📞</span>
                     <span className="text-[9px] text-gray-400">{items[2].text1}</span>
                   </div>
                 )}
                 {items[2].text2 && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-gray-400">@</span>
+                    <span className="text-[9px] text-gray-400">✉️</span>
                     <span className="text-[9px] text-gray-400">{items[2].text2}</span>
                   </div>
                 )}
@@ -678,7 +678,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
                 {/* Store Info */}
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
-                    <MapPin className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                    <div className="text-base">📍</div>
                     <div className="flex-1">
                       <p className="text-[10px] font-bold mb-0.5">Address</p>
                       <p className="text-[9px] text-gray-600">
@@ -688,7 +688,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
                   </div>
 
                   <div className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
-                    <Clock className="w-4 h-4 text-gray-600 shrink-0 mt-0.5" />
+                    <div className="text-base">🕐</div>
                     <div className="flex-1">
                       <p className="text-[10px] font-bold mb-0.5">Store Hours</p>
                       <p className="text-[9px] text-gray-600">Mon - Sun: 10:00 AM - 9:30 PM</p>
@@ -697,7 +697,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
                   </div>
 
                   <div className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0 mt-0.5" />
+                    <div className="text-base">⭐</div>
                     <div className="flex-1">
                       <p className="text-[10px] font-bold mb-0.5">Rating</p>
                       <div className="flex items-center gap-1">
@@ -715,12 +715,10 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <button className="flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-bold">
-                    <Phone className="w-3 h-3" />
-                    Call
+                    📞 Call
                   </button>
                   <button className="flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg text-[10px] font-bold">
-                    <Navigation className="w-3 h-3" />
-                    Direction
+                    🗺️ Direction
                   </button>
                 </div>
 

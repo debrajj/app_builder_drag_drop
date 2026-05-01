@@ -33,7 +33,6 @@ import { toast } from 'sonner';
 import { MobilePreview } from './MobilePreview';
 import { DraggableSectionList } from './DraggableSectionList';
 import { SectionStyle, CollectionStyle, CollectionItemStyle, NavigationScreen, CollectionTypePreset } from '../types';
-import { SECTION_STYLES, COLLECTION_STYLES, ITEM_STYLES } from '../styleLabels';
 
 export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => void }) {
   const { currentPage, fetchPage, updatePage, addCollectionGroup, updateCollectionGroup, deleteCollectionGroup, reorderCollectionGroups, addCollection, updateCollection, deleteCollection, addCollectionItem, updateCollectionItem, deleteCollectionItem } = useStore();
@@ -290,11 +289,11 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
                       }}
                       className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     >
-                      {selectedType === 'group' && Object.entries(SECTION_STYLES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                      {selectedType === 'group' && Object.values(SectionStyle).map(s => <option key={s} value={s}>{s}</option>)}
                       
-                      {selectedType === 'collection' && Object.entries(COLLECTION_STYLES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                      {selectedType === 'collection' && Object.values(CollectionStyle).map(s => <option key={s} value={s}>{s}</option>)}
                       
-                      {selectedType === 'item' && Object.entries(ITEM_STYLES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                      {selectedType === 'item' && Object.values(CollectionItemStyle).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -335,7 +334,7 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
                   <div className="space-y-4">
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-700">
-                        <strong>Auto-sync:</strong> When you change the Collection Style, all items inside will automatically update to match!
+                        💡 <strong>Auto-sync:</strong> When you change the Collection Style, all items inside will automatically update to match!
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -483,18 +482,8 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
                         placeholder="https://... (supports images and video URLs)"
                       />
                       {(selectedItem as any).media && (
-                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          {((selectedItem as any).media.includes('youtube.com') || (selectedItem as any).media.includes('youtu.be') || (selectedItem as any).media.includes('vimeo.com') || (selectedItem as any).media.endsWith('.mp4') || (selectedItem as any).media.endsWith('.webm')) ? (
-                            <>
-                              <Video className="w-3 h-3" />
-                              <span>Video URL detected</span>
-                            </>
-                          ) : (
-                            <>
-                              <ImageIcon className="w-3 h-3" />
-                              <span>Image URL detected</span>
-                            </>
-                          )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {((selectedItem as any).media.includes('youtube.com') || (selectedItem as any).media.includes('youtu.be') || (selectedItem as any).media.includes('vimeo.com') || (selectedItem as any).media.endsWith('.mp4') || (selectedItem as any).media.endsWith('.webm')) ? '📹 Video URL detected' : '🖼️ Image URL detected'}
                         </div>
                       )}
                     </div>
