@@ -139,6 +139,8 @@ export interface Page {
   name: string;
   slug: string;
   status: "draft" | "published";
+  logo?: string;
+  additionalData?: any;
   collectionGroups: CollectionGroup[];
   createdAt: string;
   updatedAt: string;

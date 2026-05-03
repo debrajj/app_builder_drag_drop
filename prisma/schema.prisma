@@ -15,50 +15,52 @@ model Page {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   customerId       String?
-  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  logo             String?
+  additionalData   String?
   collectionGroups CollectionGroup[]
+  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model CollectionGroup {
-  id             String       @id @default(uuid())
-  name           String
-  style          String
+  id              String       @id @default(uuid())
+  name            String
+  style           String
   backgroundImage String?
-  reference      String?
-  additionalData String?      // JSON string
-  status         String       @default("draft")
-  order          Int          @default(0)
-  pageId         String
-  page           Page         @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  collections    Collection[]
+  reference       String?
+  additionalData  String?
+  status          String       @default("draft")
+  order           Int          @default(0)
+  pageId          String
+  collections     Collection[]
+  page            Page         @relation(fields: [pageId], references: [id], onDelete: Cascade)
 }
 
 model Collection {
-  id                String            @id @default(uuid())
+  id                String           @id @default(uuid())
   name              String
   link              String?
   shopifyId         String?
   collectionType    String?
-  isScrollable      Boolean           @default(false)
+  isScrollable      Boolean          @default(false)
   style             String
-  horizontal        Boolean           @default(false)
-  additionalData    String?           // JSON string
-  navigation        String?           // JSON string
+  horizontal        Boolean          @default(false)
+  additionalData    String?
+  navigation        String?
   image             String?
   column            Int?
   button            String?
-  collectionFilters String?           // JSON string
-  status            String            @default("draft")
-  order             Int               @default(0)
+  collectionFilters String?
+  status            String           @default("draft")
+  order             Int              @default(0)
   groupId           String
-  group             CollectionGroup   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group             CollectionGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   items             CollectionItem[]
 }
 
 model CollectionItem {
   id             String     @id @default(uuid())
   name           String
-  images         String?    // JSON string
+  images         String?
   text1          String?
   text2          String?
   text3          String?
@@ -66,9 +68,9 @@ model CollectionItem {
   shopifyId      String?
   style          String
   media          String?
-  additionalData String?    // JSON string
+  additionalData String?
   reference      String?
-  navigation     String?    // JSON string
+  navigation     String?
   button         String?
   status         String     @default("draft")
   order          Int        @default(0)
@@ -77,28 +79,28 @@ model CollectionItem {
 }
 
 model GlobalSetting {
-  id                         String  @id @default(uuid())
-  offers                     String?
-  bestSellerTag              String?
-  newArrivalTag              String?
-  sellingFastTag             String?
-  bigSaveBasedOnValue        String?
-  productLabelTheme          String?
-  wishlist                   Boolean @default(true)
-  productDetailTag           String? // JSON string
-  tagPriority                String? // JSON string
-  sellingFastQTY             Int?
-  appForceUpdateVersion      String?
-  appNewVersion              String?
-  androidForceUpdateVersion  String?
-  androidNewVersion          String?
-  iosForceUpdateVersion      String?
-  iosNewVersion              String?
+  id                        String  @id @default(uuid())
+  offers                    String?
+  bestSellerTag             String?
+  newArrivalTag             String?
+  sellingFastTag            String?
+  bigSaveBasedOnValue       String?
+  productLabelTheme         String?
+  wishlist                  Boolean @default(true)
+  productDetailTag          String?
+  tagPriority               String?
+  sellingFastQTY            Int?
+  appForceUpdateVersion     String?
+  appNewVersion             String?
+  androidForceUpdateVersion String?
+  androidNewVersion         String?
+  iosForceUpdateVersion     String?
+  iosNewVersion             String?
 }
 
 model GlobalStyle {
   id        String @id @default(uuid())
-  styleList String // JSON string
+  styleList String
 }
 
 model Store {
@@ -146,23 +148,23 @@ model Media {
 }
 
 model HomeShopPage {
-  id        String @id @default(uuid())
-  data      String // JSON string
+  id   String @id @default(uuid())
+  data String
 }
 
 model Customer {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("customer") // customer, admin
-  status    String   @default("active") // active, inactive, suspended
-  phone     String?
-  lastLogin DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  pages     Page[]
-  stores    Store[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String
+  role          String         @default("customer")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lastLogin     DateTime?
+  phone         String?
+  status        String         @default("active")
+  media         Media[]
+  pages         Page[]
   productColors ProductColor[]
-  media     Media[]
+  stores        Store[]
 }

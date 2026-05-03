@@ -205,7 +205,7 @@ app.get("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
 });
 
 app.put("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
-  const { name, slug, status } = req.body;
+  const { name, slug, status, logo, additionalData } = req.body;
   
   // Check ownership
   const existingPage = await prisma.page.findFirst({
@@ -221,7 +221,7 @@ app.put("/api/pages/:id", authenticateToken, async (req: AuthRequest, res) => {
   
   const page = await prisma.page.update({
     where: { id: req.params.id },
-    data: { name, slug, status }
+    data: { name, slug, status, logo, additionalData }
   });
   res.json(page);
 });

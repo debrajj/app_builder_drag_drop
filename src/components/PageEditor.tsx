@@ -40,6 +40,17 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
   const [selectedType, setSelectedType] = useState<'group' | 'collection' | 'item' | null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
+  const [pageName, setPageName] = useState('');
+  const [pageSlug, setPageSlug] = useState('');
+  const [pageLogo, setPageLogo] = useState('');
+
+  useEffect(() => {
+    if (currentPage) {
+      setPageName(currentPage.name);
+      setPageSlug(currentPage.slug);
+      setPageLogo(currentPage.logo || '');
+    }
+  }, [currentPage?.id]);
 
   useEffect(() => {
     fetchPage(pageId);
@@ -575,43 +586,143 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
                   </div>
                 )}
 
-                {/* Additional Data JSON Editor */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#999] uppercase">Additional Data (JSON)</label>
-                    <FileJson className="w-4 h-4 text-[#999]" />
+                {/* Banner/Slider Settings */}
+                {(selectedType === 'group' || selectedType === 'collection' || selectedType === 'item') && (
+                  <div className="p-4 bg-gray-50 rounded-xl border border-[#E5E5E5] space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-blue-600">
+                        <ImageIcon className="w-4 h-4" />
+                        <h4 className="text-sm font-bold uppercase tracking-wider">Banner Settings</h4>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-[#999] uppercase">Banner Size (Aspect Ratio)</label>
+                        <select 
+                          value={(() => {
+                            const data = selectedItem.additionalData;
+                            if (typeof data === 'string') {
+                              try {
+                                return JSON.parse(data)?.aspectRatio || 'auto';
+                              } catch {
+                                return 'auto';
+                              }
+                            }
+                            return data?.aspectRatio || 'auto';
+                          })()} 
+                          onChange={(e) => {
+                            const currentData = (() => {
+                              const data = selectedItem.additionalData;
+                              if (typeof data === 'string') {
+                                try {
+                                  return JSON.parse(data);
+                                } catch {
+                                  return {};
+                                }
+                              }
+                              return data || {};
+                            })();
+                            
+                            const val = e.target.value;
+                            let newData = { ...currentData };
+                            if (val === 'auto') {
+                              delete newData.aspectRatio;
+                            } else {
+                              newData.aspectRatio = val;
+                              newData.autoAdopt = true; // Automatically add autoAdopt for explicit sizes
+                            }
+                            
+                            const dataString = JSON.stringify(newData);
+                            if (selectedType === 'group') updateCollectionGroup(selectedId!, { additionalData: dataString });
+                            if (selectedType === 'collection') updateCollection(selectedId!, { additionalData: dataString });
+                            if (selectedType === 'item') updateCollectionItem(selectedId!, { additionalData: dataString });
+                          }}
+                          className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        >
+                          <option value="auto">Auto (Default)</option>
+                          <option value="portrait">Portrait (Tall - Mobile Optimized)</option>
+                          <option value="landscape">Landscape (Wide)</option>
+                          <option value="square">Square (1:1)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <textarea 
-                    value={typeof selectedItem.additionalData === 'string' ? selectedItem.additionalData : JSON.stringify(selectedItem.additionalData || {}, null, 2)} 
-                    onChange={(e) => {
-                      try {
-                        const val = e.target.value;
-                        if (selectedType === 'group') updateCollectionGroup(selectedId!, { additionalData: val });
-                        if (selectedType === 'collection') updateCollection(selectedId!, { additionalData: val });
-                        if (selectedType === 'item') updateCollectionItem(selectedId!, { additionalData: val });
-                      } catch (e) {}
-                    }}
-                    rows={6}
-                    className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
-                  />
-                </div>
+                )}
+
+                {/* Additional Data JSON Editor */}
+                <details className="space-y-2 bg-gray-50 border border-[#E5E5E5] rounded-xl overflow-hidden group">
+                  <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-100 transition-colors list-none">
+                    <div className="flex items-center gap-2">
+                      <FileJson className="w-4 h-4 text-[#999]" />
+                      <span className="text-xs font-bold text-[#999] uppercase">Advanced: Raw JSON Data</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[#999] group-open:rotate-90 transition-transform" />
+                  </summary>
+                  <div className="p-4 pt-0">
+                    <textarea 
+                      value={typeof selectedItem.additionalData === 'string' ? selectedItem.additionalData : JSON.stringify(selectedItem.additionalData || {}, null, 2)} 
+                      onChange={(e) => {
+                        try {
+                          const val = e.target.value;
+                          if (selectedType === 'group') updateCollectionGroup(selectedId!, { additionalData: val });
+                          if (selectedType === 'collection') updateCollection(selectedId!, { additionalData: val });
+                          if (selectedType === 'item') updateCollectionItem(selectedId!, { additionalData: val });
+                        } catch (e) {}
+                      }}
+                      rows={6}
+                      className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    />
+                  </div>
+                </details>
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <Layout className="w-10 h-10 text-[#CCC]" />
+            <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div>
+                <h3 className="text-2xl font-bold">Page Settings</h3>
+                <p className="text-[#666] text-sm uppercase font-bold tracking-widest mt-1">Configure global page properties</p>
               </div>
-              <h3 className="text-xl font-bold text-[#1A1A1A]">Select an element to edit</h3>
-              <p className="text-[#666] max-w-xs mt-2">Choose a section, block, or item from the left sidebar to start configuring its properties.</p>
-              
-              <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200 max-w-md">
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#999] uppercase">Page Name</label>
+                  <input 
+                    type="text" 
+                    value={pageName} 
+                    onChange={(e) => setPageName(e.target.value)}
+                    onBlur={() => updatePage(pageId, { name: pageName })}
+                    className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#999] uppercase">Slug</label>
+                  <input 
+                    type="text" 
+                    value={pageSlug} 
+                    onChange={(e) => setPageSlug(e.target.value)}
+                    onBlur={() => updatePage(pageId, { slug: pageSlug })}
+                    className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label className="text-xs font-bold text-[#999] uppercase">Site Logo URL</label>
+                  <input 
+                    type="text" 
+                    value={pageLogo} 
+                    onChange={(e) => setPageLogo(e.target.value)}
+                    onBlur={() => updatePage(pageId, { logo: pageLogo })}
+                    className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <h4 className="text-sm font-bold text-blue-800 mb-2">Quick Tips:</h4>
                 <ul className="text-xs text-blue-700 space-y-1 text-left">
-                  <li>• Use FOOTER_SECTION + FOOTER_COLLECTION for footer navigation</li>
-                  <li>• Set Collection Type to STORE for shop categories</li>
-                  <li>• Video URLs are automatically detected in Media fields</li>
-                  <li>• Navigation requires Screen Name + Search String</li>
+                  <li>• Set the Site Logo URL to brand your app</li>
+                  <li>• Select a section on the left to edit its layout</li>
+                  <li>• Use the Mobile Preview to see changes in real-time</li>
                 </ul>
               </div>
             </div>
@@ -623,7 +734,7 @@ export function PageEditor({ pageId, onBack }: { pageId: string, onBack: () => v
           <aside className="w-[450px] bg-gray-100 border-l border-[#E5E5E5] flex flex-col items-center justify-center p-8 overflow-y-auto">
             <div className="sticky top-8">
               <MobilePreview 
-                data={currentPage} 
+                data={{ ...currentPage, name: pageName, slug: pageSlug, logo: pageLogo }} 
                 mode={previewMode}
                 selectedId={selectedId}
                 selectedType={selectedType}

@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   DndContext, 
   closestCenter,
@@ -18,7 +19,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { Layers, Plus, GripVertical, ChevronDown, ChevronRight, Box, Type, Video, Grid, Layout, MessageSquare, Circle, Smartphone } from 'lucide-react';
 import { ImageIcon as StoreIcon } from 'lucide-react';
 import { Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
 
 interface CollectionGroup {
   id: string;
@@ -79,6 +79,25 @@ function SortableSection({
   getCollectionIcon: (style: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const elementRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-expand if a child is selected
+  React.useEffect(() => {
+    if (selectedId) {
+      const isChildSelected = 
+        group.collections.some(c => 
+          c.id === selectedId || c.items.some(i => i.id === selectedId)
+        );
+      
+      if (isChildSelected || isSelected) {
+        setIsExpanded(true);
+        // Delay scroll to allow for expansion animation/rendering
+        setTimeout(() => {
+          elementRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      }
+    }
+  }, [selectedId, selectedType, group.id, isSelected]);
   
   const {
     attributes,
@@ -96,7 +115,10 @@ function SortableSection({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="space-y-1">
+    <div ref={(node) => {
+      setNodeRef(node);
+      (elementRef as any).current = node;
+    }} style={style} className="space-y-1">
       <div
         className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
           isSelected ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50 text-[#1A1A1A]'

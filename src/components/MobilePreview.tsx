@@ -32,11 +32,25 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     return url;
   };
 
-  const renderItem = (item: any) => {
+  const renderItem = (item: any, collection?: any, group?: any) => {
     // Handle video URLs
     const isVideo = item.media && (item.media.includes('youtube.com') || item.media.includes('youtu.be') || item.media.includes('vimeo.com') || item.media.endsWith('.mp4') || item.media.endsWith('.webm'));
     const isDirectVideo = item.media && (item.media.endsWith('.mp4') || item.media.endsWith('.webm'));
     const isEmbedVideo = isVideo && !isDirectVideo;
+    
+    const getAspectRatioClass = () => {
+      let dataStr = item?.additionalData || collection?.additionalData || group?.additionalData;
+      if (!dataStr) return 'aspect-[16/9]';
+      try {
+        const data = typeof dataStr === 'string' ? JSON.parse(dataStr) : dataStr;
+        if (data?.aspectRatio === 'portrait') return 'aspect-[3/4]';
+        if (data?.aspectRatio === 'landscape') return 'aspect-[16/9]';
+        if (data?.aspectRatio === 'square') return 'aspect-square';
+        if (data?.aspectRatio === 'auto') return '';
+      } catch (e) {}
+      return 'aspect-[16/9]';
+    };
+    const aspectClass = getAspectRatioClass();
     
     const isSelected = selectedId === item.id && selectedType === 'item';
     const selectedClass = isSelected ? 'bg-blue-50 border-2 border-blue-400' : '';
@@ -66,8 +80,8 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       case CollectionItemStyle.BANNER_COLLECTION_ITEM:
       case CollectionItemStyle.VIDEO_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className={`w-full aspect-[16/9] bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-all ${selectedClass}`}>
-            {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+          <div key={item.id} onClick={handleClick} className={`w-full ${aspectClass} bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-all flex flex-col ${selectedClass}`}>
+            {item.media && !isVideo && <img src={item.media} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover`} />}
             {isDirectVideo && (
               <video 
                 src={item.media} 
@@ -98,7 +112,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       case CollectionItemStyle.REC_COLLECTION_ITEM:
       case CollectionItemStyle.SLIDER_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className={`w-40 aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border shadow-sm cursor-pointer hover:shadow-md transition-all ${isSelected ? 'border-blue-400 border-2 bg-blue-50' : 'border-gray-100'}`}>
+          <div key={item.id} onClick={handleClick} className={`${collection?.horizontal === true ? 'w-40' : 'w-full'} aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border shadow-sm cursor-pointer hover:shadow-md transition-all ${isSelected ? 'border-blue-400 border-2 bg-blue-50' : 'border-gray-100'}`}>
             <div className="h-2/3 bg-gray-100 relative">
               {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
               {isDirectVideo && (
@@ -159,7 +173,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         );
       case CollectionItemStyle.GRID_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="w-[calc(50%-8px)] bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+          <div key={item.id} onClick={handleClick} className={`${collection?.horizontal === true ? 'w-[calc(50%-8px)]' : 'w-full'} bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow`}>
             <div className="aspect-square bg-gray-100 relative">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -192,10 +206,10 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         );
       case CollectionItemStyle.LANDING_PAGE_BANNER_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="w-full aspect-[2/1] bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
+          <div key={item.id} onClick={handleClick} className={`w-full ${aspectClass || 'aspect-[2/1]'} bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity`}>
             {item.media && (
               <>
-                <img src={item.media} alt={item.name} className="w-full h-full object-cover absolute inset-0" />
+                <img src={item.media} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover relative block`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               </>
             )}
@@ -212,14 +226,14 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         );
       case CollectionItemStyle.IMAGE_WITH_TEXT_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="w-full bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex gap-3 p-3 cursor-pointer hover:shadow-md transition-shadow">
-            <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+          <div key={item.id} onClick={handleClick} className={`w-full bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex ${collection?.horizontal === true ? 'flex-row gap-3 p-3' : 'flex-col'} cursor-pointer hover:shadow-md transition-shadow`}>
+            <div className={`${collection?.horizontal === true ? 'w-24 h-24' : `w-full ${aspectClass}`} bg-gray-100 rounded-lg overflow-hidden shrink-0`}>
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <h4 className="text-xs font-bold mb-1 line-clamp-2">{item.text1 || item.name}</h4>
-              <p className="text-[10px] text-gray-600 line-clamp-2">{item.text2}</p>
-              {item.text3 && <span className="text-xs font-bold text-blue-600 mt-1">{item.text3}</span>}
+            <div className={`flex-1 flex flex-col justify-center ${collection?.horizontal === true ? '' : 'p-4'}`}>
+              <h4 className="text-sm font-bold mb-1 line-clamp-2">{item.text1 || item.name}</h4>
+              <p className="text-xs text-gray-600 line-clamp-2">{item.text2}</p>
+              {item.text3 && <span className="text-xs font-bold text-blue-600 mt-2">{item.text3}</span>}
             </div>
           </div>
         );
@@ -241,7 +255,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       case CollectionItemStyle.CATEGORY_STYLE_COLLECTION_ITEM:
       case CollectionItemStyle.CATEGORY_TAB_COLLECTION_ITEM:
         return (
-          <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-2 shrink-0 w-20 cursor-pointer hover:opacity-80 transition-opacity">
+          <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-2 shrink-0 ${collection?.horizontal === true ? 'w-20' : 'w-full'} cursor-pointer hover:opacity-80 transition-opacity`}>
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden border-2 border-white shadow-md">
               {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
             </div>
@@ -387,7 +401,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     }
   };
 
-  const renderCollection = (collection: any) => {
+  const renderCollection = (collection: any, group?: any) => {
     const items = collection.items || [];
     const isBannerCollection = collection.style === 'BANNER_COLLECTION' && items.length > 1;
     const currentSlide = bannerSlides.get(collection.id) || 0;
@@ -420,7 +434,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
               >
                 {items.map((item: any) => (
                   <div key={item.id} className="w-full flex-shrink-0">
-                    {renderItem(item)}
+                    {renderItem(item, collection, group)}
                   </div>
                 ))}
               </div>
@@ -447,8 +461,14 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
             </div>
           </div>
         ) : (
-          <div className={`flex gap-3 px-4 ${collection.horizontal ? 'overflow-x-auto no-scrollbar pb-2' : 'flex-wrap'}`}>
-            {items.map(renderItem)}
+          <div className={
+            collection.horizontal === true 
+              ? 'flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2' 
+              : ['BANNER_COLLECTION', 'IMAGE_WITH_TEXT_COLLECTION', 'COLLECTION_VIDEO_COLLECTION', 'CX_REVIEW_COLLECTION'].includes(collection.style)
+                ? 'flex flex-col gap-3 px-4'
+                : 'grid grid-cols-2 gap-3 px-4'
+          }>
+            {items.map((item: any) => renderItem(item, collection, group))}
           </div>
         )}
       </div>
@@ -604,7 +624,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     
     return (
       <section key={group.id} onClick={handleGroupClick} className={`py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-all rounded-lg ${selectedClass}`} style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
-        {group.collections.map(renderCollection)}
+        {group.collections.map((c: any) => renderCollection(c, group))}
       </section>
     );
   };
@@ -628,7 +648,41 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       {/* App Header */}
       <header className="h-14 bg-white border-b border-gray-50 flex items-center justify-between px-4 shrink-0">
         <Menu className="w-5 h-5 text-gray-900" />
-        <div className="text-sm font-black tracking-tighter uppercase italic">TechnoBoost</div>
+        <div className="flex-1 flex justify-center px-4 overflow-hidden">
+          {(() => {
+            const logoUrl = data?.logo || 
+                           (typeof data?.additionalData === 'string' ? JSON.parse(data.additionalData || '{}').logo : data?.additionalData?.logo);
+            
+            if (logoUrl && logoUrl !== 'null' && logoUrl.length > 0) {
+              return (
+                <img 
+                  src={logoUrl} 
+                  alt={data.name || 'Logo'} 
+                  className="h-8 max-w-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const fallback = (e.target as HTMLImageElement).nextElementSibling;
+                    if (fallback) (fallback as HTMLElement).style.display = 'block';
+                  }}
+                />
+              );
+            }
+            return null;
+          })()}
+          {(() => {
+            const logoUrl = data?.logo || 
+                           (typeof data?.additionalData === 'string' ? JSON.parse(data.additionalData || '{}').logo : data?.additionalData?.logo);
+            
+            if (!logoUrl || logoUrl === 'null' || logoUrl.length === 0) {
+              return (
+                <div className="text-sm font-black tracking-tighter uppercase italic truncate">
+                  {data?.name || 'TechnoBoost'}
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
         <div className="flex items-center gap-3">
           <Search className="w-5 h-5 text-gray-900" />
           <div className="relative">
