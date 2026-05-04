@@ -14,6 +14,19 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
   const [bannerSlides, setBannerSlides] = useState<Map<string, number>>(new Map());
   const [selectedStore, setSelectedStore] = useState<any>(null);
 
+  // Helper function to get proxied image URL
+  const getImageUrl = (url: string) => {
+    if (!url) return '';
+    // If it's already a proxy URL or a data URL, return as-is
+    if (url.includes('/api/proxy-image') || url.startsWith('data:')) return url;
+    // If it's an external URL, proxy it through our server
+    if (url.startsWith('http')) {
+      return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+    // Otherwise return as-is (relative URLs)
+    return url;
+  };
+
   const getVideoEmbedUrl = (url: string) => {
     // Convert YouTube URLs to embed format
     if (url.includes('youtube.com/watch')) {
@@ -67,7 +80,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-1 shrink-0 w-16 cursor-pointer hover:opacity-80 transition-all rounded-lg p-1 ${selectedClass}`}>
             <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
-              {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && !isVideo && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
               {isVideo && (
                 <div className="w-full h-full bg-gray-800 flex items-center justify-center">
                   <Video className="w-6 h-6 text-white" />
@@ -81,10 +94,10 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
       case CollectionItemStyle.VIDEO_COLLECTION_ITEM:
         return (
           <div key={item.id} onClick={handleClick} className={`w-full ${aspectClass} bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-all flex flex-col ${selectedClass}`}>
-            {item.media && !isVideo && <img src={item.media} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover`} />}
+            {item.media && !isVideo && <img src={getImageUrl(item.media)} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover`} />}
             {isDirectVideo && (
               <video 
-                src={item.media} 
+                src={getImageUrl(item.media)} 
                 controls 
                 className="w-full h-full object-cover"
                 playsInline
@@ -114,10 +127,10 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className={`${collection?.horizontal === true ? 'w-40' : 'w-full'} aspect-[3/4] bg-white rounded-xl overflow-hidden shrink-0 border shadow-sm cursor-pointer hover:shadow-md transition-all ${isSelected ? 'border-blue-400 border-2 bg-blue-50' : 'border-gray-100'}`}>
             <div className="h-2/3 bg-gray-100 relative">
-              {item.media && !isVideo && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && !isVideo && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
               {isDirectVideo && (
                 <video 
-                  src={item.media} 
+                  src={getImageUrl(item.media)} 
                   controls 
                   className="w-full h-full object-cover"
                   playsInline
@@ -155,7 +168,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 shrink-0 px-4 py-2 bg-white rounded-lg border border-gray-50 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-              {item.media && !isVideo ? <img src={item.media} alt={item.name} className="w-5 h-5 object-contain" /> : <Star className="w-4 h-4" />}
+              {item.media && !isVideo ? <img src={getImageUrl(item.media)} alt={item.name} className="w-5 h-5 object-contain" /> : <Star className="w-4 h-4" />}
             </div>
             <span className="text-[9px] font-bold text-center uppercase tracking-tighter">{item.name}</span>
           </div>
@@ -164,7 +177,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-32 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100 relative">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className="p-2 text-center">
               <h4 className="text-xs font-bold truncate">{item.text1 || item.name}</h4>
@@ -175,7 +188,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className={`${collection?.horizontal === true ? 'w-[calc(50%-8px)]' : 'w-full'} bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow`}>
             <div className="aspect-square bg-gray-100 relative">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className="p-2">
               <h4 className="text-xs font-bold truncate">{item.text1 || item.name}</h4>
@@ -187,7 +200,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-64 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              {item.media && <img src={item.media} alt={item.name} className="w-8 h-8 rounded-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-8 h-8 rounded-full object-cover" />}
               <div>
                 <h4 className="text-xs font-bold">{item.name}</h4>
                 <div className="flex items-center gap-0.5">
@@ -209,7 +222,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
           <div key={item.id} onClick={handleClick} className={`w-full ${aspectClass || 'aspect-[2/1]'} bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity`}>
             {item.media && (
               <>
-                <img src={item.media} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover relative block`} />
+                <img src={getImageUrl(item.media)} alt={item.name} className={`w-full ${aspectClass ? 'h-full' : 'h-auto'} object-cover relative block`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               </>
             )}
@@ -228,7 +241,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className={`w-full bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm flex ${collection?.horizontal === true ? 'flex-row gap-3 p-3' : 'flex-col'} cursor-pointer hover:shadow-md transition-shadow`}>
             <div className={`${collection?.horizontal === true ? 'w-24 h-24' : `w-full ${aspectClass}`} bg-gray-100 rounded-lg overflow-hidden shrink-0`}>
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className={`flex-1 flex flex-col justify-center ${collection?.horizontal === true ? '' : 'p-4'}`}>
               <h4 className="text-sm font-bold mb-1 line-clamp-2">{item.text1 || item.name}</h4>
@@ -242,7 +255,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
           <div key={item.id} onClick={handleClick} className="w-full bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4 p-4">
               <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shrink-0 shadow-sm">
-                {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+                {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
               </div>
               <div className="flex-1">
                 <h4 className="text-sm font-bold mb-1 text-gray-900">{item.text1 || item.name}</h4>
@@ -257,7 +270,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className={`flex flex-col items-center gap-2 shrink-0 ${collection?.horizontal === true ? 'w-20' : 'w-full'} cursor-pointer hover:opacity-80 transition-opacity`}>
             <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden border-2 border-white shadow-md">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <span className="text-[10px] font-bold text-center truncate w-full">{item.name}</span>
           </div>
@@ -267,7 +280,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-40 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100 relative">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-3">
                 <h4 className="text-xs font-bold text-white">{item.text1 || item.name}</h4>
               </div>
@@ -278,7 +291,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-48 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-[3/4] bg-gray-100 relative">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
               <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full">
                 <span className="text-[8px] font-bold text-blue-600">COMPLETE LOOK</span>
               </div>
@@ -295,7 +308,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-full bg-white rounded-lg p-3 border border-gray-100 flex gap-3 cursor-pointer hover:shadow-md transition-shadow">
             <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className="flex-1">
               <h4 className="text-xs font-bold truncate">{item.text1 || item.name}</h4>
@@ -315,7 +328,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className="p-2">
               <h4 className="text-[10px] font-bold truncate">{item.text1 || item.name}</h4>
@@ -327,7 +340,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-72 bg-white rounded-xl p-4 shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="flex items-start gap-3">
-              {item.media && <img src={item.media} alt={item.name} className="w-12 h-12 rounded-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-12 h-12 rounded-full object-cover" />}
               <div className="flex-1">
                 <h4 className="text-xs font-bold">{item.name}</h4>
                 <div className="flex items-center gap-0.5 my-1">
@@ -343,7 +356,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="w-36 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div className="aspect-square bg-gray-100">
-              {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+              {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
             </div>
             <div className="p-2">
               <h4 className="text-[10px] font-bold truncate">{item.text1 || item.name}</h4>
@@ -356,7 +369,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
         return (
           <div key={item.id} onClick={handleClick} className="flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
             {item.media ? (
-              <img src={item.media} alt={item.name} className="w-5 h-5 object-contain" />
+              <img src={getImageUrl(item.media)} alt={item.name} className="w-5 h-5 object-contain" />
             ) : (
               <Star className="w-5 h-5" />
             )}
@@ -368,7 +381,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
           <div key={item.id} onClick={handleClick} className="w-full aspect-video bg-gray-200 rounded-xl overflow-hidden shrink-0 relative cursor-pointer hover:opacity-90 transition-opacity">
             {isDirectVideo && (
               <video 
-                src={item.media} 
+                src={getImageUrl(item.media)} 
                 controls 
                 className="w-full h-full object-cover"
                 playsInline
@@ -538,7 +551,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
                 className="w-32 bg-white rounded-xl overflow-hidden shrink-0 border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
               >
                 <div className="aspect-square bg-gray-100 relative">
-                  {item.media && <img src={item.media} alt={item.name} className="w-full h-full object-cover" />}
+                  {item.media && <img src={getImageUrl(item.media)} alt={item.name} className="w-full h-full object-cover" />}
                 </div>
                 <div className="p-2 text-center">
                   <h4 className="text-xs font-bold truncate">{item.text1 || item.name}</h4>
@@ -623,7 +636,7 @@ export function MobilePreview({ data, mode, selectedId, selectedType, onSelectIt
     };
     
     return (
-      <section key={group.id} onClick={handleGroupClick} className={`py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-all rounded-lg ${selectedClass}`} style={{ backgroundImage: group.backgroundImage ? `url(${group.backgroundImage})` : undefined, backgroundSize: 'cover' }}>
+      <section key={group.id} onClick={handleGroupClick} className={`py-6 space-y-6 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50/50 transition-all rounded-lg ${selectedClass}`} style={{ backgroundImage: group.backgroundImage ? `url(${getImageUrl(group.backgroundImage)})` : undefined, backgroundSize: 'cover' }}>
         {group.collections.map((c: any) => renderCollection(c, group))}
       </section>
     );

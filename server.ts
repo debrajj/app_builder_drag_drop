@@ -610,6 +610,32 @@ app.get("/api/appbuild/data", async (req, res) => {
   }
 });
 
+// Image proxy endpoint - handles CORS and caching for external images
+app.get("/api/proxy-image", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'URL parameter required' });
+    }
+    
+    const response = await axios.get(url, { 
+      responseType: 'arraybuffer',
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    res.set('Content-Type', response.headers['content-type'] || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.send(response.data);
+  } catch (error: any) {
+    console.error('Image proxy error:', error.message);
+    // Return a placeholder image on error
+    res.status(500).json({ error: 'Failed to load image' });
+  }
+});
+
 // Get page data by slug - e.g., /api/showcase or /api/home
 app.get("/api/:slug", async (req, res) => {
   try {
