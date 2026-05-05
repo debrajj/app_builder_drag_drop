@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { Plus, Search, FileText, ChevronRight, Trash2, Globe } from 'lucide-react';
+import { Plus, Search, FileText, ChevronRight, Trash2, Globe, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function Dashboard({ onEditPage }: { onEditPage: (id: string) => void }) {
-  const { pages, createPage, deletePage, fetchMiddlewareData, loading } = useStore();
+  const { pages, createPage, deletePage, fetchMiddlewareData, loading, clearCache } = useStore();
   const [search, setSearch] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [newPageName, setNewPageName] = useState('');
@@ -41,6 +41,16 @@ export function Dashboard({ onEditPage }: { onEditPage: (id: string) => void }) 
       } catch (e) {
         toast.error('Failed to delete page');
       }
+    }
+  };
+
+  const handleClearCache = async (slug: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await clearCache(slug);
+      toast.success('Cache refreshed successfully');
+    } catch (e) {
+      toast.error('Failed to refresh cache');
     }
   };
 
@@ -133,6 +143,13 @@ export function Dashboard({ onEditPage }: { onEditPage: (id: string) => void }) 
                   </div>
                 </div>
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => handleClearCache(page.slug, e)}
+                    className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Refresh Page Cache"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={(e) => handleDelete(page.id, e)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"

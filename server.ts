@@ -511,9 +511,29 @@ app.get("/api/middleware/home-page", async (req, res) => {
   }
 });
 
+// Cache storage for app build data
+let appBuildCache: any = null;
+const slugCache = new Map<string, any>();
+
+// Endpoint to clear the cache
+app.post("/api/cache/clear", async (req, res) => {
+  const { slug } = req.body || {};
+  if (slug) {
+    slugCache.delete(slug);
+  } else {
+    slugCache.clear();
+  }
+  appBuildCache = null; // Always clear the main app build cache to prevent stale data
+  res.json({ success: true });
+});
+
 // App Build Data - Complete JSON export in middleware format
 app.get("/api/appbuild/data", async (req, res) => {
   try {
+    if (appBuildCache != null) {
+      return res.json(appBuildCache);
+    }
+
     // Fetch the showcase page (or first published page)
     const page = await prisma.page.findFirst({
       where: { status: 'published' },
@@ -603,6 +623,7 @@ app.get("/api/appbuild/data", async (req, res) => {
       additionalData: group.additionalData ? JSON.parse(group.additionalData) : null
     }));
 
+    appBuildCache = middlewareFormat; // Set cache
     res.json(middlewareFormat);
   } catch (error: any) {
     console.error("Error fetching app build data:", error);
@@ -641,6 +662,10 @@ app.get("/api/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
     
+    if (slugCache.has(slug)) {
+      return res.json(slugCache.get(slug));
+    }
+
     // Find page by slug
     const page = await prisma.page.findFirst({
       where: { 
@@ -733,6 +758,7 @@ app.get("/api/:slug", async (req, res) => {
       additionalData: group.additionalData ? JSON.parse(group.additionalData) : null
     }));
 
+    slugCache.set(slug, middlewareFormat); // Set cache
     res.json(middlewareFormat);
   } catch (error: any) {
     console.error(`Error fetching page by slug:`, error);

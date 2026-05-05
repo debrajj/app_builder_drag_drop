@@ -62,6 +62,7 @@ interface AppState {
   createPage: (name: string) => Promise<void>;
   updatePage: (id: string, data: any) => Promise<void>;
   deletePage: (id: string) => Promise<void>;
+  clearCache: (slug?: string) => Promise<void>;
   
   fetchGlobalSettings: () => Promise<void>;
   updateGlobalSettings: (data: any) => Promise<void>;
@@ -185,6 +186,15 @@ export const useStore = create<AppState>((set, get) => ({
   deletePage: async (id: string) => {
     await api.delete(`/api/pages/${id}`);
     get().fetchPages();
+  },
+
+  clearCache: async (slug?: string) => {
+    try {
+      await api.post('/api/cache/clear', { slug });
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      throw error;
+    }
   },
 
   fetchGlobalSettings: async () => {
